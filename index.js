@@ -1,13 +1,7 @@
 import fs from "fs-extra";
 import _ from "lodash";
-type Options = {
-  path?: string;
-};
 class DB extends Map {
-  options: Options;
-  tmp: any;
-  save: () => void;
-  constructor(options: Options = {}) {
+  constructor(options = {}) {
     options = _.defaultsDeep(options, {
       path: "./databases/index.json",
     });
@@ -18,20 +12,25 @@ class DB extends Map {
     this.save = () => {
       fs.writeJsonSync(`${this.options.path}`, this.tmp);
     };
+    process.on("beforeExit", () => this.save());
   }
-  createCollection(name: string | number) {
+  createCollection(name) {
     this.tmp[name] = {};
     this.save();
   }
-  createData(collectionName: string | number, key: any, value: any) {
+  createData(collectionName, key, value) {
     this.tmp[collectionName][key] = value;
     this.save();
   }
-  getData(collectionName: string | number, key: any) {
+  getData(collectionName, key) {
     return this.tmp[collectionName][key];
   }
-  deleteData(collectionName: string | number, key: any) {
+  deleteData(collectionName, key) {
     delete this.tmp[collectionName][key];
+    this.save();
+  }
+  setExpiry(collectionName, key, expiry) {
+    this.tmp[collectionName][key][expiry];
     this.save();
   }
 }

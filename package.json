@@ -1,11 +1,9 @@
 {
-  "name": "unnamed-database",
-  "version": "1.0.0",
+  "name": "json-database",
+  "version": "1.0.3",
   "description": "The best database",
-  "main": "index.ts",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "main": "index.js",
+  "type":"module",
   "keywords": [
     "Database",
     "db"
@@ -13,7 +11,6 @@
   "author": "Rajaneesh.R",
   "license": "ISC",
   "dependencies": {
-    "bson": "^4.6.4",
     "fs-extra": "^10.1.0",
     "lodash": "^4.17.21"
   },
@@ -21,5 +18,9 @@
     "@types/fs-extra": "^9.0.13",
     "@types/lodash": "^4.14.182",
     "ts-node": "^10.8.1"
-  }
+  },
+  "files": [
+    "index.js",
+    "package.json"
+  ]
 }
