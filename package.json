@@ -1,6 +1,6 @@
 {
   "name": "json-database",
-  "version": "1.0.3",
+  "version": "1.0.0",
   "description": "The best database",
   "main": "index.js",
   "type":"module",
