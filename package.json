@@ -1,26 +1,28 @@
 {
-  "name": "json-database",
-  "version": "1.0.0",
-  "description": "The best database",
+  "name": "@rajaneesh_r/json-db",
+  "version": "0.0.1-beta.1",
+  "type": "module",
   "main": "index.js",
-  "type":"module",
-  "keywords": [
-    "Database",
-    "db"
-  ],
-  "author": "Rajaneesh.R",
-  "license": "ISC",
+  "typings": "index.d.ts",
+  "scripts": {
+    "test": "node test.js",
+    "publish-beta-public": "npm publish --access public --tag beta --registry=https://registry.npmjs.com",
+    "publish-beta-private": "npm publish --access public --tag beta",
+    "publish-public": "npm publish --access public",
+    "publish-private": "npm publish --access public --registry=https://registry.npmjs.com"
+  },
+  "author": {
+    "name": "Rajaneesh.R",
+    "email": "rajaneeshr2006@gmail.com"
+  },
   "dependencies": {
+    "axios": "^0.27.2",
     "fs-extra": "^10.1.0",
     "lodash": "^4.17.21"
   },
   "devDependencies": {
     "@types/fs-extra": "^9.0.13",
     "@types/lodash": "^4.14.182",
-    "ts-node": "^10.8.1"
-  },
-  "files": [
-    "index.js",
-    "package.json"
-  ]
+    "@types/node": "^18.6.1"
+  }
 }

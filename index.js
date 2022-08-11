@@ -1,37 +1,121 @@
+import axios from "axios";
 import fs from "fs-extra";
 import _ from "lodash";
-class DB extends Map {
-  constructor(options = {}) {
+import zlib from "zlib";
+class DB {
+  constructor(options = { path: "./databases/index.dx", uniqueKey: true }) {
     options = _.defaultsDeep(options, {
-      path: "./databases/index.json",
+      path: "./databases/index.dx",
+      uniqueKey: true,
+      serverPath: "",
     });
-    super();
+    this.server = options.serverPath !== "" ? true : false;
     this.options = options;
+    this.collectionName = "index";
     this.tmp = {};
+
     fs.ensureFileSync(`${this.options.path}`);
-    this.save = () => {
-      fs.writeJsonSync(`${this.options.path}`, this.tmp);
-    };
-    process.on("beforeExit", () => this.save());
+    try {
+      this.tmp = JSON.parse(zlib.inflateRawSync(fs.readFileSync(`${this.options.path}`))) ?? {};
+    } catch {
+      fs.writeFileSync(`${this.options.path}`, zlib.deflateRawSync(Buffer.from(JSON.stringify({}))));
+      this.tmp = JSON.parse(zlib.inflateRawSync(fs.readFileSync(`${this.options.path}`))) ?? {};
+    }
+    const events = [
+      "beforeExit",
+      "rejectionHandled",
+      "uncaughtException",
+      "unhandledRejection",
+      "exit",
+      "beforeExit",
+      "SIGHUP",
+      "SIGTERM",
+      "SIGINT",
+      "SIGBREAK",
+      "SIGKILL",
+    ];
+
+    events.forEach((eventName) => {
+      process.on(eventName, (...args) => {
+        Promise.resolve(this.#save());
+        process.exit(0);
+      });
+    });
+    setInterval(() => {
+      this.#save();
+    }, 5000);
   }
-  createCollection(name) {
-    this.tmp[name] = {};
-    this.save();
+  #save() {
+    if (!this.server) fs.writeFileSync(`${this.options.path}`, zlib.deflateRawSync(Buffer.from(JSON.stringify(this.tmp))));
+
+    this.#sendRequest();
   }
-  createData(collectionName, key, value) {
-    this.tmp[collectionName][key] = value;
-    this.save();
+  async #sendRequest() {
+    if (!this.server) return;
+    await axios.post(`${this.options.serverPath}`, { data: JSON.stringify(this.tmp) }, { method: "POST" }).catch((error) => {
+      console.log(`E: ${error}`);
+    });
   }
-  getData(collectionName, key) {
-    return this.tmp[collectionName][key];
+  createCollection(collectionName, cb) {
+    if (this.tmp[collectionName]) return;
+    this.tmp[collectionName] = [];
+    if (cb) cb(collectionName, this.tmp[collectionName]);
+    return this.tmp[collectionName];
   }
-  deleteData(collectionName, key) {
-    delete this.tmp[collectionName][key];
-    this.save();
+  deleteCollection(collectionName, cb) {
+    delete this.tmp[collectionName];
+    if (cb) cb();
+    return;
   }
-  setExpiry(collectionName, key, expiry) {
-    this.tmp[collectionName][key][expiry];
-    this.save();
+  deleteDoc(fn, cb) {
+    this.tmp[this.collectionName].forEach((doc, index) => {
+      const vals = Object.values(doc);
+      vals.forEach((val) => {
+        if (fn(val)) {
+          this.tmp[this.collectionName].splice(index, 1);
+        }
+      });
+    });
+    if (cb) cb(true);
+  }
+  findDoc(fn, cb) {
+    let op;
+    this.tmp[this.collectionName].forEach((doc, index) => {
+      const vals = Object.values(doc);
+      vals.forEach((val) => {
+        if (fn(val)) op = doc;
+      });
+    });
+    if (cb) cb(op);
+    return op;
+  }
+  getCollection(collectionName, cb) {
+    this.collectionName = collectionName;
+    if (cb) cb(this.tmp[collectionName]);
+
+    return this.tmp[collectionName];
+  }
+  hasDoc(fn, cb) {
+    this.tmp[this.collectionName].forEach((doc, index) => {
+      const vals = Object.values(doc);
+      vals.forEach((val) => {
+        if (fn(val)) {
+          op = doc;
+          has = true;
+        }
+      });
+    });
+    if (cb) cb(has);
+    return has;
+  }
+  setDoc(params, cb) {
+    if (!Array.isArray(params)) this.tmp[this.collectionName].push(params);
+    else
+      params.forEach((param) => {
+        this.tmp[this.collectionName].push(param);
+      });
+    if (cb) cb(this.tmp[this.collectionName]);
+    return this.tmp[this.collectionName];
   }
 }
 export default DB;
