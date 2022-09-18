@@ -55,3 +55,4 @@ And install the package using
 
 ### Usage
 
+Read the [docs](https://r-rajaneesh.github.io/quipodb)
