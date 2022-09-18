@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://R-Rajaneesh.github.io/quipodb/sitemap.xml.gz
