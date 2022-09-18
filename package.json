@@ -1,24 +1,35 @@
 {
-  "name": "@rajaneesh_r/json-db",
-  "version": "0.0.1-beta.1",
+  "name": "quipodb",
+  "version": "0.0.2-beta.0",
   "type": "module",
   "main": "index.js",
   "typings": "index.d.ts",
   "scripts": {
     "test": "node test.js",
-    "publish-beta-public": "npm publish --access public --tag beta --registry=https://registry.npmjs.com",
-    "publish-beta-private": "npm publish --access public --tag beta",
-    "publish-public": "npm publish --access public",
-    "publish-private": "npm publish --access public --registry=https://registry.npmjs.com"
+    "publish-beta-public": "npm publish --tag beta --registry=https://registry.npmjs.com",
+    "publish-beta-private": "npm publish --tag beta",
+    "publish-public": "npm publish --registry=https://registry.npmjs.com",
+    "publish-private": "npm publish"
   },
   "author": {
     "name": "Rajaneesh.R",
     "email": "rajaneeshr2006@gmail.com"
   },
+  "keywords": [
+    "quipodb",
+    "db",
+    "database",
+    "DB",
+    "Database",
+    "ttl",
+    "key",
+    "value",
+    "store"
+  ],
   "dependencies": {
-    "axios": "^0.27.2",
     "fs-extra": "^10.1.0",
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.21",
+    "moment": "^2.29.4"
   },
   "devDependencies": {
     "@types/fs-extra": "^9.0.13",

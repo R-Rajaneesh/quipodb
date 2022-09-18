@@ -1,0 +1,26 @@
+input: .
+output: .retype
+url: https://R-Rajaneesh.github.io/quipodb
+favicon: favicon.png
+meta:
+  description: "Easy to use better-sqlite3 wrapper with tons of features"
+snippets:
+  lineNumbers:
+    - js
+branding:
+  title: quipodb
+  label: Docs
+  logo: favicon.png
+links:
+- text: Getting Started
+  link: docs.md
+- text: Github
+  link: https://github.com/R-Rajaneesh/quipodb
+- text: NPM
+  link: https://www.npmjs.com/package/quipodb
+- text: Issues
+  link: https://github.com/R-Rajaneesh/quipodb/issues
+- text: Changelog
+  link: changelog.md
+footer:
+  copyright: "&copy; Copyright {{ year }}. All rights reserved."

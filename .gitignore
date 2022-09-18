@@ -35,6 +35,6 @@ yarn-error.log*
 *.tsbuildinfo
 
 # custom
-index1.js
-*.dx
+*.db
 test.js
+package-lock.json
