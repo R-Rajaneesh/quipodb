@@ -5,12 +5,8 @@
 - [constructor](#constructor)
 - [createCollection](#createcollection)
 - [deleteColection](#deletecolection)
-- [deleteDoc](#deletedoc)
-- [findDoc](#finddoc)
 - [getCollection](#getcollection)
-- [hasDoc](#hasdoc)
-- [setDoc](#setdoc)
-- [updateDoc](#updatedoc)
+
 
 ### Default
 
@@ -22,7 +18,7 @@ const db = new QuipoDB(constructor)
 
 |Option|Type|Default Value|
 |------|----|--------------|
-|path|String|`./databases/index.db`|
+|path|String|`./databases/index.sqlite`|
 |unique|Boolean|`true`|
 |overwrite|Boolean|`false`|
 
@@ -33,11 +29,17 @@ const db = new QuipoDB(constructor)
 |collectionName|String|`index`|
 |cb|Function|`(collection)=>{}`|
 
-### deleteColection
+- [createDoc](#createdoc)
+- [deleteDoc](#deletedoc)
+- [findDoc](#finddoc)
+- [hasDoc](#hasdoc)
+- [updateDoc](#updatedoc)
+
+### createDoc
 |Option|Type|Default Value|
 |------|----|--------------|
-|collectionName|String|`index`|
-|cb|Function|`()=>{}`|
+|params|Object \| Array<Object>|`{}`|
+|cb|Object[]|`(doc)=>{}`|
 ### deleteDoc
 |Option|Type|Default Value|
 |------|----|--------------|
@@ -48,24 +50,25 @@ const db = new QuipoDB(constructor)
 |------|----|--------------|
 |fn|Function|`(doc)=>{}`|
 |cb|Function|`()=>{}`|
-### getCollection
-|Option|Type|Default Value|
-|------|----|--------------|
-|fn|Function|`(doc)=>{}`|
-|cb|Function|`()=>{}`|
 ### hasDoc
 |Option|Type|Default Value|
 |------|----|--------------|
 |fn|Function|`(doc)=>{}`|
 |cb|Function|`()=>{}`|
-### setDoc
-|Option|Type|Default Value|
-|------|----|--------------|
-|params|Object \| Array<Object>|`{}`|
-|cb|Array|`(doc)=>{}`|
 ### updateDoc
 |Option|Type|Default Value|
 |------|----|--------------|
 |params|Object<Object>|`{}`|
 |updateparams|Object<Object>|`{}`|
-|cb|Array|`(doc)=>{}`|
+|cb|Object[]|`(this)=>{}`|
+
+### deleteColection
+|Option|Type|Default Value|
+|------|----|--------------|
+|collectionName|String|`index`|
+|cb|Function|`()=>{}`|
+### getCollection
+|Option|Type|Default Value|
+|------|----|--------------|
+|fn|Function|`(doc)=>{}`|
+|cb|Function|`(document[])=>{}`|

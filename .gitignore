@@ -36,5 +36,8 @@ yarn-error.log*
 
 # custom
 *.db
+*.sqlite
 test.js
 package-lock.json
+old/
+databases/

@@ -39,7 +39,11 @@ If you need to update `npm`, you can make it using `npm`! Cool right? After runn
 
     $ npm install npm -g
 
-###
+### TODO
+
+- Make a new Icon
+- Make README more nice
+- Add upcoming features in PR's
 
 ### Npm installation
 

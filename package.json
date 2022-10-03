@@ -1,11 +1,11 @@
 {
   "name": "quipodb",
-  "version": "0.0.2-beta.0",
+  "version": "1.0.0",
   "type": "module",
-  "main": "index.js",
-  "typings": "index.d.ts",
+  "main": "./dist/index.js",
+  "typings": "./dist/index.d.ts",
   "scripts": {
-    "test": "node test.js",
+    "build": "tsc index.ts -t esnext -m esnext -d --allowSyntheticDefaultImports --moduleResolution node --outDir ./dist",
     "publish-beta-public": "npm publish --tag beta --registry=https://registry.npmjs.com",
     "publish-beta-private": "npm publish --tag beta",
     "publish-public": "npm publish --registry=https://registry.npmjs.com",
@@ -19,21 +19,21 @@
     "quipodb",
     "db",
     "database",
-    "DB",
-    "Database",
+    "sqlite",
     "ttl",
     "key",
     "value",
     "store"
   ],
   "dependencies": {
+    "better-sqlite3": "^7.6.2",
     "fs-extra": "^10.1.0",
-    "lodash": "^4.17.21",
-    "moment": "^2.29.4"
+    "lodash": "^4.17.21"
   },
   "devDependencies": {
     "@types/fs-extra": "^9.0.13",
     "@types/lodash": "^4.14.182",
-    "@types/node": "^18.6.1"
+    "@types/node": "^18.6.1",
+    "typescript": "^4.8.3"
   }
 }
