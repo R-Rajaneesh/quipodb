@@ -26,12 +26,12 @@
     <script>(function () { var el = document.documentElement, m = localStorage.getItem("/quipodb/doc_theme"), wm = window.matchMedia; if (m === "dark" || (!m && wm && wm("(prefers-color-scheme: dark)").matches)) { el.classList.add("dark") } else { el.classList.remove("dark") } })();</script>
 
     <link href="/quipodb/favicon.png" rel="icon" />
-    <link href="/quipodb/resources/css/retype.css?v=1.11.2.716824050050" rel="stylesheet" data-turbo-track="reload" />
+    <link href="/quipodb/resources/css/retype.css?v=1.11.2.718125061064" rel="stylesheet" data-turbo-track="reload" />
 
-    <script type="text/javascript" src="/quipodb/resources/js/config.js?v=1.11.2.716824050050" defer data-turbo-track="reload"></script>
+    <script type="text/javascript" src="/quipodb/resources/js/config.js?v=1.11.2.718125061064" defer data-turbo-track="reload"></script>
     <script type="text/javascript" src="/quipodb/resources/js/retype.js?v=1.11.2" defer data-turbo-track="reload"></script>
-    <script id="lunr-js" type="text/javascript" src="/quipodb/resources/js/lunr.js?v=1.11.2.716824050050" defer></script>
-    <script id="prism-js" type="text/javascript" src="/quipodb/resources/js/prism.js?v=1.11.2.716824050050" defer></script>
+    <script id="lunr-js" type="text/javascript" src="/quipodb/resources/js/lunr.js?v=1.11.2.718125061064" defer></script>
+    <script id="prism-js" type="text/javascript" src="/quipodb/resources/js/prism.js?v=1.11.2.718125061064" defer></script>
 </head>
     <body>
         <div id="docs-app" class="relative text-base antialiased text-gray-700 bg-white font-body dark:bg-dark-850 dark:text-dark-300">
@@ -223,12 +223,7 @@
 <li><doc-anchor-trigger to="#constructor">constructor</doc-anchor-trigger></li>
 <li><doc-anchor-trigger to="#createcollection">createCollection</doc-anchor-trigger></li>
 <li><doc-anchor-trigger to="#deletecolection">deleteColection</doc-anchor-trigger></li>
-<li><doc-anchor-trigger to="#deletedoc">deleteDoc</doc-anchor-trigger></li>
-<li><doc-anchor-trigger to="#finddoc">findDoc</doc-anchor-trigger></li>
 <li><doc-anchor-trigger to="#getcollection">getCollection</doc-anchor-trigger></li>
-<li><doc-anchor-trigger to="#hasdoc">hasDoc</doc-anchor-trigger></li>
-<li><doc-anchor-trigger to="#setdoc">setDoc</doc-anchor-trigger></li>
-<li><doc-anchor-trigger to="#updatedoc">updateDoc</doc-anchor-trigger></li>
 </ul>
 <doc-anchor-target id="default">
     <h3>
@@ -259,7 +254,7 @@ const db = new QuipoDB(constructor)</code></pre>
 <tr>
 <td>path</td>
 <td>String</td>
-<td><code v-pre>./databases/index.db</code></td>
+<td><code v-pre>./databases/index.sqlite</code></td>
 </tr>
 <tr>
 <td>unique</td>
@@ -303,10 +298,17 @@ const db = new QuipoDB(constructor)</code></pre>
 </tbody>
 </table>
 </div>
-<doc-anchor-target id="deletecolection">
+<ul>
+<li><doc-anchor-trigger to="#createdoc">createDoc</doc-anchor-trigger></li>
+<li><doc-anchor-trigger to="#deletedoc">deleteDoc</doc-anchor-trigger></li>
+<li><doc-anchor-trigger to="#finddoc">findDoc</doc-anchor-trigger></li>
+<li><doc-anchor-trigger to="#hasdoc">hasDoc</doc-anchor-trigger></li>
+<li><doc-anchor-trigger to="#updatedoc">updateDoc</doc-anchor-trigger></li>
+</ul>
+<doc-anchor-target id="createdoc">
     <h3>
-        <doc-anchor-trigger class="header-anchor-trigger" to="#deletecolection">#</doc-anchor-trigger>
-        <span>deleteColection</span>
+        <doc-anchor-trigger class="header-anchor-trigger" to="#createdoc">#</doc-anchor-trigger>
+        <span>createDoc</span>
     </h3>
 </doc-anchor-target>
 <div class="table-wrapper scrollbar overflow-hidden">
@@ -320,14 +322,14 @@ const db = new QuipoDB(constructor)</code></pre>
 </thead>
 <tbody>
 <tr>
-<td>collectionName</td>
-<td>String</td>
-<td><code v-pre>index</code></td>
+<td>params</td>
+<td>Object | Array<Object></td>
+<td><code v-pre>{}</code></td>
 </tr>
 <tr>
 <td>cb</td>
-<td>Function</td>
-<td><code v-pre>()=&gt;{}</code></td>
+<td>Object[]</td>
+<td><code v-pre>(doc)=&gt;{}</code></td>
 </tr>
 </tbody>
 </table>
@@ -390,35 +392,6 @@ const db = new QuipoDB(constructor)</code></pre>
 </tbody>
 </table>
 </div>
-<doc-anchor-target id="getcollection">
-    <h3>
-        <doc-anchor-trigger class="header-anchor-trigger" to="#getcollection">#</doc-anchor-trigger>
-        <span>getCollection</span>
-    </h3>
-</doc-anchor-target>
-<div class="table-wrapper scrollbar overflow-hidden">
-<table class="comfortable">
-<thead>
-<tr>
-<th>Option</th>
-<th>Type</th>
-<th>Default Value</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>fn</td>
-<td>Function</td>
-<td><code v-pre>(doc)=&gt;{}</code></td>
-</tr>
-<tr>
-<td>cb</td>
-<td>Function</td>
-<td><code v-pre>()=&gt;{}</code></td>
-</tr>
-</tbody>
-</table>
-</div>
 <doc-anchor-target id="hasdoc">
     <h3>
         <doc-anchor-trigger class="header-anchor-trigger" to="#hasdoc">#</doc-anchor-trigger>
@@ -444,35 +417,6 @@ const db = new QuipoDB(constructor)</code></pre>
 <td>cb</td>
 <td>Function</td>
 <td><code v-pre>()=&gt;{}</code></td>
-</tr>
-</tbody>
-</table>
-</div>
-<doc-anchor-target id="setdoc">
-    <h3>
-        <doc-anchor-trigger class="header-anchor-trigger" to="#setdoc">#</doc-anchor-trigger>
-        <span>setDoc</span>
-    </h3>
-</doc-anchor-target>
-<div class="table-wrapper scrollbar overflow-hidden">
-<table class="comfortable">
-<thead>
-<tr>
-<th>Option</th>
-<th>Type</th>
-<th>Default Value</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>params</td>
-<td>Object | Array<Object></td>
-<td><code v-pre>{}</code></td>
-</tr>
-<tr>
-<td>cb</td>
-<td>Array</td>
-<td><code v-pre>(doc)=&gt;{}</code></td>
 </tr>
 </tbody>
 </table>
@@ -505,8 +449,66 @@ const db = new QuipoDB(constructor)</code></pre>
 </tr>
 <tr>
 <td>cb</td>
-<td>Array</td>
+<td>Object[]</td>
+<td><code v-pre>(this)=&gt;{}</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<doc-anchor-target id="deletecolection">
+    <h3>
+        <doc-anchor-trigger class="header-anchor-trigger" to="#deletecolection">#</doc-anchor-trigger>
+        <span>deleteColection</span>
+    </h3>
+</doc-anchor-target>
+<div class="table-wrapper scrollbar overflow-hidden">
+<table class="comfortable">
+<thead>
+<tr>
+<th>Option</th>
+<th>Type</th>
+<th>Default Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>collectionName</td>
+<td>String</td>
+<td><code v-pre>index</code></td>
+</tr>
+<tr>
+<td>cb</td>
+<td>Function</td>
+<td><code v-pre>()=&gt;{}</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<doc-anchor-target id="getcollection">
+    <h3>
+        <doc-anchor-trigger class="header-anchor-trigger" to="#getcollection">#</doc-anchor-trigger>
+        <span>getCollection</span>
+    </h3>
+</doc-anchor-target>
+<div class="table-wrapper scrollbar overflow-hidden">
+<table class="comfortable">
+<thead>
+<tr>
+<th>Option</th>
+<th>Type</th>
+<th>Default Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>fn</td>
+<td>Function</td>
 <td><code v-pre>(doc)=&gt;{}</code></td>
+</tr>
+<tr>
+<td>cb</td>
+<td>Function</td>
+<td><code v-pre>(document[])=&gt;{}</code></td>
 </tr>
 </tbody>
 </table>
