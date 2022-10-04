@@ -26,11 +26,11 @@
     <script>(function () { var el = document.documentElement, m = localStorage.getItem("/quipodb/doc_theme"), wm = window.matchMedia; if (m === "dark" || (!m && wm && wm("(prefers-color-scheme: dark)").matches)) { el.classList.add("dark") } else { el.classList.remove("dark") } })();</script>
 
     <link href="/quipodb/favicon.png" rel="icon" />
-    <link href="/quipodb/resources/css/retype.css?v=1.11.2.718125061064" rel="stylesheet" data-turbo-track="reload" />
+    <link href="/quipodb/resources/css/retype.css?v=1.11.2.718200591507" rel="stylesheet" data-turbo-track="reload" />
 
-    <script type="text/javascript" src="/quipodb/resources/js/config.js?v=1.11.2.718125061064" defer data-turbo-track="reload"></script>
+    <script type="text/javascript" src="/quipodb/resources/js/config.js?v=1.11.2.718200591507" defer data-turbo-track="reload"></script>
     <script type="text/javascript" src="/quipodb/resources/js/retype.js?v=1.11.2" defer data-turbo-track="reload"></script>
-    <script id="lunr-js" type="text/javascript" src="/quipodb/resources/js/lunr.js?v=1.11.2.718125061064" defer></script>
+    <script id="lunr-js" type="text/javascript" src="/quipodb/resources/js/lunr.js?v=1.11.2.718200591507" defer></script>
 </head>
     <body>
         <div id="docs-app" class="relative text-base antialiased text-gray-700 bg-white font-body dark:bg-dark-850 dark:text-dark-300">
@@ -233,6 +233,26 @@
 <li>Added document</li>
 <li>Added changelogs</li>
 <li>Added a nice logo (stole it from flaticon)</li>
+</ul>
+<doc-anchor-target id="100">
+    <h2>
+        <doc-anchor-trigger class="header-anchor-trigger" to="#100">#</doc-anchor-trigger>
+        <span>1.0.0</span>
+    </h2>
+</doc-anchor-target>
+<ul>
+<li>Changed <code v-pre>setDoc</code> to <code v-pre>createDoc</code></li>
+<li>Added <code v-pre>hasDoc</code></li>
+<li>Moved DB function into a new class</li>
+</ul>
+<doc-anchor-target id="101">
+    <h2>
+        <doc-anchor-trigger class="header-anchor-trigger" to="#101">#</doc-anchor-trigger>
+        <span>1.0.1</span>
+    </h2>
+</doc-anchor-target>
+<ul>
+<li>Added atomic setters for <code v-pre>updateDoc</code></li>
 </ul>
 
 
