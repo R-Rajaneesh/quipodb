@@ -1,6 +1,7 @@
 import BSQLite from "better-sqlite3";
 import fs from "fs-extra";
 import _ from "lodash";
+import { mergeAndConcat } from "merge-anything";
 
 interface constructorOptions {
   path?: string;
@@ -25,12 +26,12 @@ class QuipoDB {
       inMemory: true,
     });
     this.options = options;
+    fs.ensureFileSync(`${this.options.path}`);
     this.storage = {};
     this.sqlite = new SQLite({ fileName: `${this.options.path}` });
     this.ready = false;
 
     // Set-up
-    fs.ensureFileSync(`${this.options.path}`);
     if (this.options.inMemory) {
       this.sqlite.provider
         .prepare(`SELECT name FROM sqlite_master WHERE type='table'`)
@@ -88,7 +89,7 @@ class QuipoDB {
     return this.storage[collectionName];
   }
 }
-//
+// Document
 class Doc {
   public storage: storage;
   private collectionName: string;
@@ -165,16 +166,105 @@ class Doc {
       return this;
     }
     if (typeof value === "function") {
+      let newValue = _.defaultsDeep(value(oldVal), oldVal);
       const index = this.storage[this.collectionName].findIndex((doc) => value(doc));
-      this.storage[this.collectionName][index] = _.defaultsDeep(value(oldVal), oldVal);
-      if (this.options.inMemory) this.sqlite.updateRow(this.collectionName, this.primaryKey, _.defaultsDeep(value(oldVal), oldVal));
+      Object.keys(value(oldVal))
+        .filter((v) => v.startsWith("$"))
+        .forEach((atomic) => {
+          newValue = _.defaultsDeep(new Query()[atomic](oldVal, value(oldVal)[atomic]), oldVal);
+        });
+      this.storage[this.collectionName][index] = _.defaultsDeep(newValue, oldVal);
+      if (this.options.inMemory) this.sqlite.updateRow(this.collectionName, this.primaryKey, _.defaultsDeep(newValue, oldVal));
     } else if (typeof value === "object") {
+      let newValue = _.defaultsDeep(value, oldVal);
+      Object.keys(value)
+        .filter((v) => v.startsWith("$"))
+        .forEach((atomic) => {
+          newValue = _.defaultsDeep(new Query()[atomic](oldVal, value[atomic]), oldVal);
+        });
       const index = this.storage[this.collectionName].findIndex((doc) => doc[this.primaryKey] === data[this.primaryKey]);
-      this.storage[this.collectionName][index] = _.defaultsDeep(value, oldVal);
-      if (this.options.inMemory) this.sqlite.updateRow(this.collectionName, this.primaryKey, value);
+      this.storage[this.collectionName][index] = _.defaultsDeep(newValue, oldVal);
+      if (this.options.inMemory) this.sqlite.updateRow(this.collectionName, this.primaryKey, _.defaultsDeep(newValue, oldVal));
     }
     cb(this);
     return this;
+  }
+}
+class Query {
+  constructor() {}
+  public where(query: string) {
+    _.get;
+  }
+  public $add(...data: Object[]) {
+    const deepMerge = (oldData: any, newData: any) => {
+      return Object.keys(oldData).reduce((acc, key) => {
+        if (typeof newData[key] === "object") {
+          acc[key] = deepMerge(oldData[key], newData[key]);
+        } else if (newData.hasOwnProperty(key) && !isNaN(parseFloat(newData[key]))) {
+          if (!acc[key]) acc[key] = oldData[key] + newData[key];
+          acc[key] = oldData[key] + newData[key];
+        }
+        return acc;
+      }, {});
+    };
+
+    const result = data.reduce((acc, obj) => (acc = deepMerge(acc, obj)));
+
+    return result;
+  }
+  public $subtract(...data: Object[]) {
+    const deepMerge = (oldData: any, newData: any) => {
+      return Object.keys(oldData).reduce((acc, key) => {
+        if (typeof newData[key] === "object") {
+          acc[key] = deepMerge(oldData[key], newData[key]);
+        } else if (newData.hasOwnProperty(key) && !isNaN(parseFloat(newData[key]))) {
+          if (!acc[key]) acc[key] = oldData[key] - newData[key];
+          acc[key] = oldData[key] - newData[key];
+        }
+        return acc;
+      }, {});
+    };
+
+    const result = data.reduce((acc, obj) => (acc = deepMerge(acc, obj)));
+
+    return result;
+  }
+  public $multiply(...data: Object[]) {
+    const deepMerge = (oldData: any, newData: any) => {
+      return Object.keys(oldData).reduce((acc, key) => {
+        if (typeof newData[key] === "object") {
+          acc[key] = deepMerge(oldData[key], newData[key]);
+        } else if (newData.hasOwnProperty(key) && !isNaN(parseFloat(newData[key]))) {
+          if (!acc[key]) acc[key] = oldData[key] * newData[key];
+          acc[key] = oldData[key] * newData[key];
+        }
+        return acc;
+      }, {});
+    };
+
+    const result = data.reduce((acc, obj) => (acc = deepMerge(acc, obj)));
+
+    return result;
+  }
+  public $divide(...data: Object[]) {
+    const deepMerge = (oldData: any, newData: any) => {
+      return Object.keys(oldData).reduce((acc, key) => {
+        if (typeof newData[key] === "object") {
+          acc[key] = deepMerge(oldData[key], newData[key]);
+        } else if (newData.hasOwnProperty(key) && !isNaN(parseFloat(newData[key]))) {
+          if (!acc[key]) acc[key] = oldData[key] / newData[key];
+          acc[key] = oldData[key] / newData[key];
+        }
+        return acc;
+      }, {});
+    };
+
+    const result = data.reduce((acc, obj) => (acc = deepMerge(acc, obj)));
+
+    return result;
+  }
+  public $push(oldval: any, newVal: any) {
+    return mergeAndConcat(oldval, newVal);
   }
 }
 
