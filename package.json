@@ -28,9 +28,7 @@
   "dependencies": {
     "better-sqlite3": "^7.6.2",
     "fs-extra": "^10.1.0",
-    "is-what": "^4.1.7",
-    "lodash": "^4.17.21",
-    "merge-anything": "^5.0.4"
+    "lodash": "^4.17.21"
   },
   "devDependencies": {
     "@types/fs-extra": "^9.0.13",
