@@ -60,3 +60,4 @@ And install the package using
 ### Usage
 
 Read the [docs](https://r-rajaneesh.github.io/quipodb)
+For more support join my [discord server](https://discord.com/invite/Gmxxw6KfEF)
