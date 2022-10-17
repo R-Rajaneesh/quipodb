@@ -26,12 +26,12 @@
     <script>(function () { var el = document.documentElement, m = localStorage.getItem("/quipodb/doc_theme"), wm = window.matchMedia; if (m === "dark" || (!m && wm && wm("(prefers-color-scheme: dark)").matches)) { el.classList.add("dark") } else { el.classList.remove("dark") } })();</script>
 
     <link href="/quipodb/favicon.png" rel="icon" />
-    <link href="/quipodb/resources/css/retype.css?v=1.11.2.719236520538" rel="stylesheet" data-turbo-track="reload" />
+    <link href="/quipodb/resources/css/retype.css?v=1.11.2.719341685142" rel="stylesheet" data-turbo-track="reload" />
 
-    <script type="text/javascript" src="/quipodb/resources/js/config.js?v=1.11.2.719236520538" defer data-turbo-track="reload"></script>
+    <script type="text/javascript" src="/quipodb/resources/js/config.js?v=1.11.2.719341685142" defer data-turbo-track="reload"></script>
     <script type="text/javascript" src="/quipodb/resources/js/retype.js?v=1.11.2" defer data-turbo-track="reload"></script>
-    <script id="lunr-js" type="text/javascript" src="/quipodb/resources/js/lunr.js?v=1.11.2.719236520538" defer></script>
-    <script id="prism-js" type="text/javascript" src="/quipodb/resources/js/prism.js?v=1.11.2.719236520538" defer></script>
+    <script id="lunr-js" type="text/javascript" src="/quipodb/resources/js/lunr.js?v=1.11.2.719341685142" defer></script>
+    <script id="prism-js" type="text/javascript" src="/quipodb/resources/js/prism.js?v=1.11.2.719341685142" defer></script>
 </head>
     <body>
         <div id="docs-app" class="relative text-base antialiased text-gray-700 bg-white font-body dark:bg-dark-850 dark:text-dark-300">
@@ -232,8 +232,8 @@
     </h3>
 </doc-anchor-target>
 <div class="codeblock-wrapper"><doc-codeblock line-numbers>
-<pre class="language-javascript"><code v-pre class="language-javascript">import QuipoDB from &quot;quipodb&quot;
-const db = new QuipoDB(constructor)</code></pre>
+<pre class="language-javascript"><code v-pre class="language-javascript">import QuipoDB from &quot;quipodb&quot;;
+const db = new QuipoDB(constructor);</code></pre>
 </doc-codeblock></div>
 <doc-anchor-target id="constructor">
     <h3>
@@ -257,14 +257,14 @@ const db = new QuipoDB(constructor)</code></pre>
 <td><code v-pre>./databases/index.sqlite</code></td>
 </tr>
 <tr>
-<td>unique</td>
-<td>Boolean</td>
-<td><code v-pre>true</code></td>
-</tr>
-<tr>
-<td>overwrite</td>
+<td>inMemory</td>
 <td>Boolean</td>
 <td><code v-pre>false</code></td>
+</tr>
+<tr>
+<td>provider</td>
+<td>Class</td>
+<td><code v-pre>SQLite</code></td>
 </tr>
 </tbody>
 </table>
@@ -289,6 +289,11 @@ const db = new QuipoDB(constructor)</code></pre>
 <td>collectionName</td>
 <td>String</td>
 <td><code v-pre>index</code></td>
+</tr>
+<tr>
+<td>primaryKey</td>
+<td>String</td>
+<td><code v-pre>NULL</code></td>
 </tr>
 <tr>
 <td>cb</td>
@@ -323,7 +328,7 @@ const db = new QuipoDB(constructor)</code></pre>
 <tbody>
 <tr>
 <td>params</td>
-<td>Object | Array<Object></td>
+<td>document|document[]</td>
 <td><code v-pre>{}</code></td>
 </tr>
 <tr>
@@ -334,6 +339,7 @@ const db = new QuipoDB(constructor)</code></pre>
 </tbody>
 </table>
 </div>
+<p>An key named <code v-pre>ttl (Time-To-Live)</code> will delete the document when the time is equal or greater than the current time.</p>
 <doc-anchor-target id="deletedoc">
     <h3>
         <doc-anchor-trigger class="header-anchor-trigger" to="#deletedoc">#</doc-anchor-trigger>
@@ -439,12 +445,12 @@ const db = new QuipoDB(constructor)</code></pre>
 <tbody>
 <tr>
 <td>params</td>
-<td>Object<Object></td>
+<td>document</td>
 <td><code v-pre>{}</code></td>
 </tr>
 <tr>
 <td>updateparams</td>
-<td>Object<Object></td>
+<td>document</td>
 <td><code v-pre>{}</code></td>
 </tr>
 <tr>
@@ -512,6 +518,343 @@ const db = new QuipoDB(constructor)</code></pre>
 </tr>
 </tbody>
 </table>
+</div>
+<doc-anchor-target id="plugins">
+    <h1>
+        <doc-anchor-trigger class="header-anchor-trigger" to="#plugins">#</doc-anchor-trigger>
+        <span>Plugins</span>
+    </h1>
+</doc-anchor-target>
+<p>This lies on the class <code v-pre>QuipoDB</code> itself</p>
+<div class="codeblock-wrapper"><doc-codeblock line-numbers>
+<pre class="language-javascript"><code v-pre class="language-javascript">import QuipoDB from &quot;quipodb&quot;;
+import yourPlugin from &quot;your-plugin-package&quot;; // Or a class
+const db = new QuipoDB();
+const plugin = new yourPlugin();
+db.registerPlugin(plugin);</code></pre>
+</doc-codeblock></div>
+<p>Your plugin must expose these functions</p>
+<ul>
+<li><doc-anchor-trigger to="#createcollectionprovider">createCollectionProvider</doc-anchor-trigger></li>
+<li><doc-anchor-trigger to="#createcolumnprovider">createColumnProvider</doc-anchor-trigger></li>
+<li><doc-anchor-trigger to="#createdocprovider">createDocProvider</doc-anchor-trigger></li>
+<li><doc-anchor-trigger to="#deletecollectionprovider">deleteCollectionProvider</doc-anchor-trigger></li>
+<li><doc-anchor-trigger to="#deletedocprovider">deleteDocProvider</doc-anchor-trigger></li>
+<li><doc-anchor-trigger to="#updatedocprovider">updateDocProvider</doc-anchor-trigger></li>
+<li><doc-anchor-trigger to="#getdocprovider">getDocProvider</doc-anchor-trigger></li>
+<li><doc-anchor-trigger to="#getallcollectionsprovider">getAllCollectionsProvider</doc-anchor-trigger></li>
+<li><doc-anchor-trigger to="#getallfromcollectionprovider">getAllFromCollectionProvider</doc-anchor-trigger></li>
+<li><doc-anchor-trigger to="#hasdocprovider">hasDocProvider</doc-anchor-trigger></li>
+</ul>
+<doc-anchor-target id="createcollectionprovider">
+    <h3>
+        <doc-anchor-trigger class="header-anchor-trigger" to="#createcollectionprovider">#</doc-anchor-trigger>
+        <span>createCollectionProvider</span>
+    </h3>
+</doc-anchor-target>
+<div class="table-wrapper scrollbar overflow-hidden">
+<table class="comfortable">
+<thead>
+<tr>
+<th>Option</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>tableName</td>
+<td>String</td>
+</tr>
+<tr>
+<td>primaryColumn</td>
+<td>string</td>
+</tr>
+<tr>
+<td>dataType</td>
+<td>string</td>
+</tr>
+</tbody>
+</table>
+</div>
+<doc-anchor-target id="createcolumnprovider">
+    <h3>
+        <doc-anchor-trigger class="header-anchor-trigger" to="#createcolumnprovider">#</doc-anchor-trigger>
+        <span>createColumnProvider</span>
+    </h3>
+</doc-anchor-target>
+<div class="table-wrapper scrollbar overflow-hidden">
+<table class="comfortable">
+<thead>
+<tr>
+<th>Option</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>tableName</td>
+<td>String</td>
+</tr>
+<tr>
+<td>columnName</td>
+<td>string</td>
+</tr>
+<tr>
+<td>dataType</td>
+<td>string</td>
+</tr>
+</tbody>
+</table>
+</div>
+<doc-anchor-target id="createdocprovider">
+    <h3>
+        <doc-anchor-trigger class="header-anchor-trigger" to="#createdocprovider">#</doc-anchor-trigger>
+        <span>createDocProvider</span>
+    </h3>
+</doc-anchor-target>
+<div class="table-wrapper scrollbar overflow-hidden">
+<table class="comfortable">
+<thead>
+<tr>
+<th>Option</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>tableName</td>
+<td>String</td>
+</tr>
+<tr>
+<td>data</td>
+<td>document</td>
+</tr>
+<tr>
+<td>cb</td>
+<td>Function</td>
+</tr>
+</tbody>
+</table>
+</div>
+<doc-anchor-target id="deletecollectionprovider">
+    <h3>
+        <doc-anchor-trigger class="header-anchor-trigger" to="#deletecollectionprovider">#</doc-anchor-trigger>
+        <span>deleteCollectionProvider</span>
+    </h3>
+</doc-anchor-target>
+<div class="table-wrapper scrollbar overflow-hidden">
+<table class="comfortable">
+<thead>
+<tr>
+<th>Option</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>tableName</td>
+<td>String</td>
+</tr>
+<tr>
+<td>cb</td>
+<td>Function</td>
+</tr>
+</tbody>
+</table>
+</div>
+<doc-anchor-target id="deletedocprovider">
+    <h3>
+        <doc-anchor-trigger class="header-anchor-trigger" to="#deletedocprovider">#</doc-anchor-trigger>
+        <span>deleteDocProvider</span>
+    </h3>
+</doc-anchor-target>
+<div class="table-wrapper scrollbar overflow-hidden">
+<table class="comfortable">
+<thead>
+<tr>
+<th>Option</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>tableName</td>
+<td>String</td>
+</tr>
+<tr>
+<td>data</td>
+<td>document</td>
+</tr>
+<tr>
+<td>cb</td>
+<td>Function</td>
+</tr>
+</tbody>
+</table>
+</div>
+<doc-anchor-target id="getdocprovider">
+    <h3>
+        <doc-anchor-trigger class="header-anchor-trigger" to="#getdocprovider">#</doc-anchor-trigger>
+        <span>getDocProvider</span>
+    </h3>
+</doc-anchor-target>
+<div class="table-wrapper scrollbar overflow-hidden">
+<table class="comfortable">
+<thead>
+<tr>
+<th>Option</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>tableName</td>
+<td>String</td>
+</tr>
+<tr>
+<td>data</td>
+<td>document</td>
+</tr>
+<tr>
+<td>cb</td>
+<td>Function</td>
+</tr>
+</tbody>
+</table>
+</div>
+<doc-anchor-target id="getallcollectionsprovider">
+    <h3>
+        <doc-anchor-trigger class="header-anchor-trigger" to="#getallcollectionsprovider">#</doc-anchor-trigger>
+        <span>getAllCollectionsProvider</span>
+    </h3>
+</doc-anchor-target>
+<div class="table-wrapper scrollbar overflow-hidden">
+<table class="comfortable">
+<thead>
+<tr>
+<th>Option</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NULL</td>
+<td>NULL</td>
+</tr>
+</tbody>
+</table>
+</div>
+<doc-anchor-target id="getallfromcollectionprovider">
+    <h3>
+        <doc-anchor-trigger class="header-anchor-trigger" to="#getallfromcollectionprovider">#</doc-anchor-trigger>
+        <span>getAllFromCollectionProvider</span>
+    </h3>
+</doc-anchor-target>
+<div class="table-wrapper scrollbar overflow-hidden">
+<table class="comfortable">
+<thead>
+<tr>
+<th>Option</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>tableName</td>
+<td>String</td>
+</tr>
+</tbody>
+</table>
+</div>
+<doc-anchor-target id="hasdocprovider">
+    <h3>
+        <doc-anchor-trigger class="header-anchor-trigger" to="#hasdocprovider">#</doc-anchor-trigger>
+        <span>hasDocProvider</span>
+    </h3>
+</doc-anchor-target>
+<div class="table-wrapper scrollbar overflow-hidden">
+<table class="comfortable">
+<thead>
+<tr>
+<th>Option</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>tableName</td>
+<td>String</td>
+</tr>
+<tr>
+<td>data</td>
+<td>document</td>
+</tr>
+<tr>
+<td>cb</td>
+<td>Function</td>
+</tr>
+</tbody>
+</table>
+</div>
+<doc-anchor-target id="updatedocprovider">
+    <h3>
+        <doc-anchor-trigger class="header-anchor-trigger" to="#updatedocprovider">#</doc-anchor-trigger>
+        <span>updateDocProvider</span>
+    </h3>
+</doc-anchor-target>
+<div class="table-wrapper scrollbar overflow-hidden">
+<table class="comfortable">
+<thead>
+<tr>
+<th>Option</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>tableName</td>
+<td>String</td>
+</tr>
+<tr>
+<td>primaryColumn</td>
+<td>String</td>
+</tr>
+<tr>
+<td>data</td>
+<td>document</td>
+</tr>
+<tr>
+<td>cb</td>
+<td>Function</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="flex mb-6">
+    <div class="flex-shrink-0 w-1 rounded-tl rounded-bl bg-blue-500 dark:bg-blue-400"></div>
+    <div class="flex w-full py-4 border border-l-0 border-gray-300 rounded-tr rounded-br doc-alert bg-white dark:bg-dark-700 dark:border-dark-700" role="alert">
+        <div class="flex items-center ml-4 h-7">
+            <svg xmlns="http://www.w3.org/2000/svg" class="mb-px text-blue-500 dark:text-blue-400" width="22" height="22" viewBox="0 0 24 24" role="presentation">
+                <g fill="currentColor"><g>
+                    <path d="M12 1C5.93 1 1 5.93 1 12s4.93 11 11 11 11-4.93 11-11S18.07 1 12 1zm0 20c-4.96 0-9-4.04-9-9s4.04-9 9-9 9 4.04 9 9-4.04 9-9 9z"></path>
+                    <path d="M12 11c-.55 0-1 .45-1 1v4c0 .55.45 1 1 1s1-.45 1-1v-4c0-.55-.45-1-1-1zM12.01 7c-.56 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"></path>
+                    <path fill="none" d="M0 0h24v24H0z"></path>
+                </g></g>
+            </svg>
+        </div>
+        <div class="pr-5 ml-3">
+            <h5>Note</h5>
+<p>Try to maintain the structure of the data when storing</p>
+<div class="codeblock-wrapper"><doc-codeblock>
+<pre class="language-typescript"><code v-pre class="language-typescript">interface document {
+  [key: string]: string | number | Object | Array&lt;any&gt; | any;
+}
+interface storage {
+  [collectioName: string]: document[];
+}</code></pre>
+</doc-codeblock></div>
+        </div>
+    </div>
 </div>
 
 
