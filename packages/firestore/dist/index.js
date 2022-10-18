@@ -4,8 +4,12 @@ export class FireStore {
     firestore;
     collection;
     collectionName;
+    primaryKey;
     constructor(options) {
-        this.app = firebaseAdmin.initializeApp(options);
+        if (!options.primaryKey)
+            throw new Error("Primary key must be defined, recieved undefined");
+        if (!firebaseAdmin.apps.length)
+            this.app = firebaseAdmin.initializeApp(options);
         this.firestore = firebaseAdmin.firestore(this.app);
     }
     createCollectionProvider(collectionName, cb = () => { }) {
@@ -16,7 +20,7 @@ export class FireStore {
     }
     createDocProvider(data, cb = () => { }) {
         if (!this.getDocProvider(data))
-            this.collection.add(data);
+            this.collection.doc(`${data[`${this.primaryKey}`]}`).set(data);
         cb();
         return;
     }
@@ -26,10 +30,7 @@ export class FireStore {
         return;
     }
     deleteDocProvider(data, cb = () => { }) {
-        this.collection
-            .where(`${Object.keys(data)[0]}`, "==", Object.values(data)[0])
-            .get()
-            .then((value) => value.docs.forEach(async (doc) => await this.collection.doc(doc.id).delete()));
+        this.collection.doc(`${data[`${this.primaryKey}`]}`).delete();
         cb();
         return;
     }
@@ -43,18 +44,7 @@ export class FireStore {
         return data;
     }
     getDocProvider(data, cb = () => { }) {
-        let result;
-        result = new Promise(async (res, rej) => {
-            await this.collection
-                .where(`${Object.keys(data)[0]}`, "==", Object.values(data)[0])
-                .get()
-                .then(async (value) => {
-                res(await value?.docs[0]?.data() ?? {});
-            });
-            setTimeout(() => {
-                rej({});
-            }, 2000);
-        });
+        const result = this.collection.doc(`${data[`${this.primaryKey}`]}`).get();
         cb(result);
         return result;
     }
@@ -75,14 +65,7 @@ export class FireStore {
         return AllData;
     }
     updateDocProvider(refData, data, cb = () => { }) {
-        let result;
-        this.collection
-            .where(`${Object.keys(refData)[0]}`, "==", Object.values(refData)[0])
-            .get()
-            .then((C) => C.docs.forEach((doc) => {
-            this.collection.doc(doc.id).update(data);
-            result = this.collection.doc(doc.id).get() ?? {};
-        }));
+        const result = this.collection.doc(`${refData[`${this.primaryKey}`]}`).update(data);
         cb(result);
         return result;
     }

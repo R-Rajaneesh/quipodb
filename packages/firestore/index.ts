@@ -7,14 +7,18 @@ interface document {
 interface storage {
   [collectioName: string]: document[];
 }
+interface FirestoreOptions extends adminFirebase.AppOptions {
+  primaryKey: String;
+}
 export class FireStore {
   app: firebaseAdmin.app.App;
   firestore: firebaseAdmin.firestore.Firestore;
   collection: firebaseAdmin.firestore.CollectionReference<firebaseAdmin.firestore.DocumentData>;
   collectionName: String;
-  constructor(options: adminFirebase.AppOptions) {
-    this.app = firebaseAdmin.initializeApp(options);
-
+  primaryKey: String;
+  constructor(options: FirestoreOptions) {
+    if (!options.primaryKey) throw new Error("Primary key must be defined, recieved undefined");
+    if (!firebaseAdmin.apps.length) this.app = firebaseAdmin.initializeApp(options);
     this.firestore = firebaseAdmin.firestore(this.app);
   }
   public createCollectionProvider(collectionName: String, cb: Function = () => {}) {
@@ -23,25 +27,22 @@ export class FireStore {
     cb(this.collection);
     return this.collection;
   }
-  createDocProvider(data: document, cb: Function = () => {}) {
-    if (!this.getDocProvider(data)) this.collection.add(data);
+  public createDocProvider(data: document, cb: Function = () => {}) {
+    if (!this.getDocProvider(data)) this.collection.doc(`${data[`${this.primaryKey}`]}`).set(data);
     cb();
     return;
   }
-  deleteCollectionProvider(collectionName: String, cb: Function = () => {}) {
+  public deleteCollectionProvider(collectionName: String, cb: Function = () => {}) {
     this.firestore.recursiveDelete(this.firestore.collection(`${collectionName}`));
     cb();
     return;
   }
-  deleteDocProvider(data: document, cb: Function = () => {}) {
-    this.collection
-      .where(`${Object.keys(data)[0]}`, "==", Object.values(data)[0])
-      .get()
-      .then((value) => value.docs.forEach(async (doc: any) => await this.collection.doc(doc.id).delete()));
+  public deleteDocProvider(data: document, cb: Function = () => {}) {
+    this.collection.doc(`${data[`${this.primaryKey}`]}`).delete();
     cb();
     return;
   }
-  getCollectionProvider(collectionName: String, cb: Function = () => {}) {
+  public getCollectionProvider(collectionName: String, cb: Function = () => {}) {
     const collection = this.firestore.collection(`${collectionName}`);
     const data: any[] = [];
     (async () => {
@@ -50,23 +51,12 @@ export class FireStore {
     cb(data);
     return data;
   }
-  getDocProvider(data: document, cb: Function = () => {}) {
-    let result: any;
-    result = new Promise(async (res, rej) => {
-      await this.collection
-        .where(`${Object.keys(data)[0]}`, "==", Object.values(data)[0])
-        .get()
-        .then(async (value) => {
-          res(await value?.docs[0]?.data()??{});
-        });
-      setTimeout(() => {
-        rej({});
-      }, 2000);
-    });
+  public getDocProvider(data: document, cb: Function = () => {}) {
+    const result = this.collection.doc(`${data[`${this.primaryKey}`]}`).get();
     cb(result);
     return result;
   }
-  getCollectionsProvider(cb: Function = () => {}) {
+  public getCollectionsProvider(cb: Function = () => {}) {
     const AllData: any = [];
     this.firestore.listCollections().then((collections) => {
       collections.forEach((collection) => {
@@ -84,17 +74,8 @@ export class FireStore {
     cb(AllData);
     return AllData;
   }
-  updateDocProvider(refData: document, data: document, cb: Function = () => {}) {
-    let result: any;
-    this.collection
-      .where(`${Object.keys(refData)[0]}`, "==", Object.values(refData)[0])
-      .get()
-      .then((C) =>
-        C.docs.forEach((doc) => {
-          this.collection.doc(doc.id).update(data);
-          result = this.collection.doc(doc.id).get()??{};
-        }),
-      );
+  public updateDocProvider(refData: document, data: document, cb: Function = () => {}) {
+    const result = this.collection.doc(`${refData[`${this.primaryKey}`]}`).update(data);
     cb(result);
     return result;
   }

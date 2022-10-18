@@ -83,7 +83,7 @@ class Docs {
     this.providers = options.providers;
     this.collectionName = options.collectionName;
   }
-  public createDoc(data: document | document[], cb: Function = () => {}) {
+  public async createDoc(data: document | document[], cb: Function = () => {}) {
     if (Array.isArray(data)) {
       data.forEach((doc) => {
         this.providers.forEach(async (provider) => {
@@ -97,22 +97,22 @@ class Docs {
     cb(data);
     return data;
   }
-  public deleteDoc(data: document | fn, cb: Function = () => {}) {
-    if (typeof data === "function") data = data(this.providers[0].getCollectionProvider(this.collectionName));
+  public async deleteDoc(data: document | fn, cb: Function = () => {}) {
+    if (typeof data === "function") data = data(await this.providers[0].getCollectionProvider(this.collectionName));
 
     this.providers.forEach(async (provider) => {
       await provider.deleteDocProvider(data);
     });
   }
-  public findDoc(data: document | fn, cb: Function = () => {}) {
+  public async findDoc(data: document | fn, cb: Function = () => {}) {
     let result: object = {};
-    if (typeof data === "function") data = data(this.providers[0].getCollectionProvider(this.collectionName)) ?? {};
-    result = this.providers[0].getDocProvider(data);
+    if (typeof data === "function") data = data(await this.providers[0].getCollectionProvider(this.collectionName)) ?? {};
+    result = await this.providers[0].getDocProvider(data);
     cb(result);
     return result;
   }
 
-  public findOrcreateDoc(data: document, cb: Function = () => {}) {
+  public async findOrcreateDoc(data: document, cb: Function = () => {}) {
     let result: document = {};
     const Data = this.findDoc(data);
     if (Data) result = Data;
@@ -122,21 +122,21 @@ class Docs {
     cb(result);
     return result;
   }
-  public getOrcreateDoc(data: document, cb: Function = () => {}) {
+  public async getOrcreateDoc(data: document, cb: Function = () => {}) {
     return this.findOrcreateDoc(data, cb);
   }
-  public getRaw(cb: Function = () => {}) {
-    const data = this.providers[0].getCollectionProvider(this.collectionName);
+  public async getRaw(cb: Function = () => {}) {
+    const data = await this.providers[0].getCollectionProvider(this.collectionName);
 
     cb(data);
     return data;
   }
-  public getDoc(data: document | fn | String, cb: Function = () => {}) {
+  public async getDoc(data: document | fn | String, cb: Function = () => {}) {
     return this.findDoc(data, cb);
   }
-  public updateDoc(refData: document, data: document | fn, cb: Function = () => {}) {
+  public async updateDoc(refData: document, data: document | fn, cb: Function = () => {}) {
     const oldDoc = this.findDoc(refData);
-    const storage = this.providers[0].getCollectionProvider(this.collectionName);
+    const storage = await this.providers[0].getCollectionProvider(this.collectionName);
     const index = storage.findIndex((doc) => doc === oldDoc);
     if (typeof data === "function") data = data(storage[index]);
 

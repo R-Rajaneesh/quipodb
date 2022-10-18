@@ -50,7 +50,7 @@ class Docs {
         this.providers = options.providers;
         this.collectionName = options.collectionName;
     }
-    createDoc(data, cb = () => { }) {
+    async createDoc(data, cb = () => { }) {
         if (Array.isArray(data)) {
             data.forEach((doc) => {
                 this.providers.forEach(async (provider) => {
@@ -64,22 +64,22 @@ class Docs {
         cb(data);
         return data;
     }
-    deleteDoc(data, cb = () => { }) {
+    async deleteDoc(data, cb = () => { }) {
         if (typeof data === "function")
-            data = data(this.providers[0].getCollectionProvider(this.collectionName));
+            data = data(await this.providers[0].getCollectionProvider(this.collectionName));
         this.providers.forEach(async (provider) => {
             await provider.deleteDocProvider(data);
         });
     }
-    findDoc(data, cb = () => { }) {
+    async findDoc(data, cb = () => { }) {
         let result = {};
         if (typeof data === "function")
-            data = data(this.providers[0].getCollectionProvider(this.collectionName)) ?? {};
-        result = this.providers[0].getDocProvider(data);
+            data = data(await this.providers[0].getCollectionProvider(this.collectionName)) ?? {};
+        result = await this.providers[0].getDocProvider(data);
         cb(result);
         return result;
     }
-    findOrcreateDoc(data, cb = () => { }) {
+    async findOrcreateDoc(data, cb = () => { }) {
         let result = {};
         const Data = this.findDoc(data);
         if (Data)
@@ -90,20 +90,20 @@ class Docs {
         cb(result);
         return result;
     }
-    getOrcreateDoc(data, cb = () => { }) {
+    async getOrcreateDoc(data, cb = () => { }) {
         return this.findOrcreateDoc(data, cb);
     }
-    getRaw(cb = () => { }) {
-        const data = this.providers[0].getCollectionProvider(this.collectionName);
+    async getRaw(cb = () => { }) {
+        const data = await this.providers[0].getCollectionProvider(this.collectionName);
         cb(data);
         return data;
     }
-    getDoc(data, cb = () => { }) {
+    async getDoc(data, cb = () => { }) {
         return this.findDoc(data, cb);
     }
-    updateDoc(refData, data, cb = () => { }) {
+    async updateDoc(refData, data, cb = () => { }) {
         const oldDoc = this.findDoc(refData);
-        const storage = this.providers[0].getCollectionProvider(this.collectionName);
+        const storage = await this.providers[0].getCollectionProvider(this.collectionName);
         const index = storage.findIndex((doc) => doc === oldDoc);
         if (typeof data === "function")
             data = data(storage[index]);

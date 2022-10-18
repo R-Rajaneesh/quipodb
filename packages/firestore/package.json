@@ -1,6 +1,6 @@
 {
   "name": "@quipodb/firestore",
-  "version": "1.0.0-beta.1",
+  "version": "1.0.1-beta.1",
   "description": "Firestore provider for this package",
   "type": "module",
   "main": "./dist/index.js",
