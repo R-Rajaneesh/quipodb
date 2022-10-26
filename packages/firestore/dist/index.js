@@ -1,73 +1,87 @@
 import firebaseAdmin from "firebase-admin";
+import _ from "lodash";
 export class FireStore {
     app;
     firestore;
     collection;
     collectionName;
-    primaryKey;
     constructor(options) {
-        if (!options.primaryKey)
-            throw new Error("Primary key must be defined, recieved undefined");
         if (!firebaseAdmin.apps.length)
             this.app = firebaseAdmin.initializeApp(options);
         this.firestore = firebaseAdmin.firestore(this.app);
     }
-    createCollectionProvider(collectionName, cb = () => { }) {
+    async createCollectionProvider(collectionName, cb = () => { }) {
         this.collectionName = collectionName;
         this.collection = this.firestore.collection(`${collectionName}`);
         cb(this.collection);
         return this.collection;
     }
-    createDocProvider(data, cb = () => { }) {
-        if (!this.getDocProvider(data))
-            this.collection.doc(`${data[`${this.primaryKey}`]}`).set(data);
+    async createDocProvider(data, cb = () => { }) {
+        this.collection.add(data);
         cb();
         return;
     }
-    deleteCollectionProvider(collectionName, cb = () => { }) {
-        this.firestore.recursiveDelete(this.firestore.collection(`${collectionName}`));
+    async deleteCollectionProvider(collectionName, cb = () => { }) {
+        try {
+            this.firestore.recursiveDelete(this.firestore.collection(collectionName));
+        }
+        catch (error) {
+            error;
+        }
         cb();
         return;
     }
-    deleteDocProvider(data, cb = () => { }) {
-        this.collection.doc(`${data[`${this.primaryKey}`]}`).delete();
+    async deleteDocProvider(data, cb = () => { }) {
+        try {
+            const snapshot = (await this.collection.get()).docs.map((doc) => ({ ...doc.data(), _id: doc.id }));
+            const res = _.find(snapshot, data);
+            if (res?._id)
+                this.collection.doc(`/${res?._id}`).delete();
+        }
+        catch (error) {
+            error;
+        }
         cb();
         return;
     }
-    getCollectionProvider(collectionName, cb = () => { }) {
-        const collection = this.firestore.collection(`${collectionName}`);
-        const data = [];
-        (async () => {
-            await collection.get().then((value) => value.docs.forEach((doc) => data.push(doc.data())));
-        })();
+    async getCollectionProvider(collectionName, cb = () => { }) {
+        const data = (await this.firestore.collection(collectionName).get()).docs.map((doc) => ({ ...doc.data(), _id: doc.id }));
         cb(data);
         return data;
     }
-    getDocProvider(data, cb = () => { }) {
-        const result = this.collection.doc(`${data[`${this.primaryKey}`]}`).get();
-        cb(result);
-        return result;
-    }
-    getCollectionsProvider(cb = () => { }) {
+    async getCollectionsProvider(cb = () => { }) {
         const AllData = [];
-        this.firestore.listCollections().then((collections) => {
-            collections.forEach((collection) => {
-                AllData[`${collection.id}`] = [];
-                this.firestore
-                    .collection(collection.id)
-                    .get()
-                    .then((value) => value.docs.forEach((doc) => {
-                    AllData.push(collection.id);
-                }));
-            });
-        });
+        await this.firestore.listCollections().then((val) => val.forEach((v) => AllData.push(v.id)));
         cb(AllData);
         return AllData;
     }
-    updateDocProvider(refData, data, cb = () => { }) {
-        const result = this.collection.doc(`${refData[`${this.primaryKey}`]}`).update(data);
+    async getDocProvider(data, cb = () => { }) {
+        let result;
+        try {
+            const snapshot = (await this.collection.get()).docs.map((doc) => ({ ...doc.data(), _id: doc.id }));
+            result = _.find(snapshot, data);
+        }
+        catch (e) {
+            result = result;
+        }
         cb(result);
         return result;
+    }
+    async updateDocProvider(refData, data, cb = () => { }) {
+        if (!(await this.getDocProvider(refData))) {
+            cb();
+            return;
+        }
+        try {
+            const snapshot = (await this.collection.get()).docs.map((doc) => ({ ...doc.data(), _id: doc.id }));
+            const res = _.find(snapshot, refData);
+            this.collection.doc(`/${res._id}`).update(data);
+        }
+        catch (error) {
+            error;
+        }
+        cb();
+        return;
     }
 }
 export const certificate = firebaseAdmin.credential.cert;

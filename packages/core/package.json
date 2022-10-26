@@ -1,6 +1,6 @@
 {
   "name": "@quipodb/core",
-  "version": "1.0.0-beta.1",
+  "version": "1.0.0",
   "type": "module",
   "main": "./dist/index.js",
   "typings": "./dist/index.d.ts",

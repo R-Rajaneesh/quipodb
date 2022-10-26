@@ -1,6 +1,6 @@
 {
   "name": "@quipodb/sqlite",
-  "version": "1.0.0-beta.1",
+  "version": "1.0.0",
   "description": "Sqlite provider for this package",
   "type": "module",
   "main": "./dist/index.js",

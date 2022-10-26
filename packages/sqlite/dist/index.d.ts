@@ -10,7 +10,7 @@ export default class Sqlite {
     sqlite: sqlite.Database;
     private options;
     private collectionName;
-    primaryKey: any;
+    private primaryKey;
     constructor(options: sqliteConstructor);
     createCollectionProvider(collectionName: String, cb?: Function): void;
     private createColumnProvider;

@@ -8,27 +8,32 @@ export default class Sqlite {
     constructor(options) {
         this.options = options;
         this.options.path ??= "./databases/index.sqlite";
-        this.primaryKey = this.options.primaryKey;
-        if (!this.primaryKey)
-            throw new QuipodbSqliteError("PRIMARY KEY is expected", "@quipodb/sqlite -> Missing property");
         try {
             fs.ensureFileSync(`${this.options.path}`);
         }
-        catch { }
+        catch (error) {
+            error;
+        }
         this.sqlite = new sqlite(`${this.options.path}`, { fileMustExist: false });
     }
     createCollectionProvider(collectionName, cb = () => { }) {
         this.collectionName = collectionName;
+        // if (!primaryKey) throw new QuipodbSqliteError("PRIMARY KEY is expected", "@quipodb/sqlite -> Missing property");
+        // this.primaryKey = primaryKey;
         try {
-            this.sqlite.prepare(`CREATE TABLE IF NOT EXISTS ${collectionName} (${this.primaryKey} NONE PRIMARY KEY NOT NULL)`).run();
+            this.sqlite.prepare(`CREATE TABLE IF NOT EXISTS ${collectionName} (_ID NONE PRIMARY KEY NOT NULL)`).run();
         }
-        catch { }
+        catch (error) {
+            error;
+        }
     }
     createColumnProvider(columnName, dataType = "NONE") {
         try {
             this.sqlite.prepare(`ALTER TABLE ${this.collectionName} ADD ${columnName} ${dataType}`).run();
         }
-        catch { }
+        catch (error) {
+            error;
+        }
     }
     createDocProvider(data, cb = () => { }) {
         const KEYS = Object.keys(data);
@@ -48,7 +53,9 @@ export default class Sqlite {
                 result = this.getDocProvider(data);
             }
         }
-        catch { }
+        catch (error) {
+            error;
+        }
         cb(result);
         return result;
     }
@@ -58,7 +65,9 @@ export default class Sqlite {
         return;
     }
     deleteDocProvider(data, cb = () => { }) {
-        this.sqlite.prepare(`DELETE FROM ${this.collectionName} WHERE ${this.primaryKey} = (?)`).run(this.getDocProvider(data)[this.primaryKey]);
+        const KEYS = Object.keys(data);
+        const VALUES = Object.values(data);
+        this.sqlite.prepare(`DELETE FROM ${this.collectionName} WHERE ${KEYS.map((k, i) => (k += ` = (?)`))}`).run(...VALUES);
         cb();
         return;
     }
@@ -76,9 +85,7 @@ export default class Sqlite {
                 result[Object.keys(result)[index]] = JSON.parse(val);
             });
         }
-        catch (e) {
-            console.log(e);
-        }
+        catch { }
         cb(result);
         return result;
     }
@@ -101,7 +108,9 @@ export default class Sqlite {
         try {
             this.sqlite.prepare(`UPDATE ${this.collectionName} SET ${args} WHERE ${this.primaryKey} = ${refData[`${this.primaryKey}`]}`).run(...VALUES);
         }
-        catch { }
+        catch (error) {
+            error;
+        }
     }
 }
 class QuipodbSqliteError extends Error {

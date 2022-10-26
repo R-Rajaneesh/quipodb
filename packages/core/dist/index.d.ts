@@ -2,23 +2,16 @@ interface constructorOptions {
     providers: providers[];
 }
 interface providers {
-    createCollectionProvider(collectionName: String, cb?: Function): void;
-    createDocProvider(data: document, cb?: Function): void;
-    deleteCollectionProvider(collectionName: String, cb?: Function): void;
-    deleteDocProvider(data: document | fn, cb?: Function): void;
-    getCollectionProvider(collectionName: String, cb?: Function): any[];
-    getDocProvider(data: document | fn, cb?: Function): any;
-    getCollectionsProvider(cb?: Function): Collection[];
-    updateDocProvider(refData: document | fn, data: document, cb?: Function): void;
+    createCollectionProvider(collectionName: String, cb?: Function): Promise<any> | any;
+    createDocProvider(data: document, cb?: Function): Promise<any> | any;
+    deleteCollectionProvider(collectionName: String, cb?: Function): Promise<any> | any;
+    deleteDocProvider(data: document | fn, cb?: Function): Promise<any> | any;
+    getCollectionProvider(collectionName: String, cb?: Function): Promise<any> | any;
+    getCollectionsProvider(cb?: Function): Promise<any> | any[];
+    getDocProvider(data: document | fn, cb?: Function): Promise<any> | any;
+    updateDocProvider(refData: document | fn, data: document, cb?: Function): Promise<any> | any;
 }
-interface Collection {
-    createDoc(data: document | fn, cb?: Function): any;
-    deleteDoc(data: document | fn, cb?: Function): any;
-    getDoc(data: document | fn, cb?: Function): any;
-    hasDoc(data: document | fn, cb?: Function): any;
-    getRaw(): any;
-}
-declare type fn = (data: Object[] | Object) => void;
+declare type fn = (data: Object[] | Object) => any;
 interface storage {
     [collection: string]: document[];
 }
@@ -47,11 +40,12 @@ declare class Docs {
     createDoc(data: document | document[], cb?: Function): Promise<document>;
     deleteDoc(data: document | fn, cb?: Function): Promise<void>;
     findDoc(data: document | fn, cb?: Function): Promise<object>;
-    findOrcreateDoc(data: document, cb?: Function): Promise<document>;
-    getOrcreateDoc(data: document, cb?: Function): Promise<document>;
-    getRaw(cb?: Function): Promise<any[]>;
-    getDoc(data: document | fn | String, cb?: Function): Promise<object>;
+    getRaw(cb?: Function): Promise<any>;
     updateDoc(refData: document, data: document | fn, cb?: Function): Promise<any>;
+    updateRaw(refData: document, cb?: Function): Promise<{
+        [x: string]: any;
+        save: Function;
+    }>;
     private $add;
     private $subtract;
     private $multiply;

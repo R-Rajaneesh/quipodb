@@ -11,32 +11,30 @@ export default class QuipoDB {
         this.providers = options.providers;
         this.storage = {};
         this.Docs = Docs;
-        // Time-To-Live
-        setInterval(() => {
-            this.providers.forEach(async (provider) => {
-                await provider.getCollectionsProvider().forEach(async (collectionName) => {
-                    await provider.getCollectionProvider(collectionName).forEach(async (doc) => {
-                        if (doc.ttl <= Date.now()) {
-                            await provider.deleteDocProvider(doc);
-                        }
-                    });
-                });
-            });
-        }, 5000);
     }
     createCollection(collectionName, cb = () => { }) {
         this.collectionName = collectionName;
-        this.providers.forEach(async (provider) => {
-            await provider.createCollectionProvider(collectionName, cb);
-        });
+        try {
+            this.providers.forEach(async (provider) => {
+                await provider.createCollectionProvider(collectionName, cb);
+            });
+        }
+        catch (error) {
+            error;
+        }
         const docs = new this.Docs({ providers: this.providers, collectionName: this.collectionName });
         cb(docs);
         return docs;
     }
     deleteCollection(collectionName, cb = () => { }) {
-        this.providers.forEach(async (provider) => {
-            await provider.deleteCollectionProvider(collectionName);
-        });
+        try {
+            this.providers.forEach(async (provider) => {
+                await provider.deleteCollectionProvider(collectionName);
+            });
+        }
+        catch (error) {
+            error;
+        }
         cb();
         return;
     }
@@ -58,51 +56,55 @@ class Docs {
                 });
             });
         }
-        this.providers.forEach(async (provider) => {
-            await provider.createDocProvider(data);
-        });
+        try {
+            this.providers.forEach(async (provider) => {
+                await provider.createDocProvider(data);
+            });
+        }
+        catch (error) {
+            error;
+        }
         cb(data);
         return data;
     }
     async deleteDoc(data, cb = () => { }) {
         if (typeof data === "function")
             data = data(await this.providers[0].getCollectionProvider(this.collectionName));
-        this.providers.forEach(async (provider) => {
-            await provider.deleteDocProvider(data);
-        });
+        try {
+            this.providers.forEach(async (provider) => {
+                await provider.deleteDocProvider(data);
+            });
+        }
+        catch (error) {
+            error;
+        }
+        cb();
+        return;
     }
     async findDoc(data, cb = () => { }) {
         let result = {};
         if (typeof data === "function")
             data = data(await this.providers[0].getCollectionProvider(this.collectionName)) ?? {};
-        result = await this.providers[0].getDocProvider(data);
-        cb(result);
-        return result;
-    }
-    async findOrcreateDoc(data, cb = () => { }) {
-        let result = {};
-        const Data = this.findDoc(data);
-        if (Data)
-            result = Data;
-        else {
-            result = this.createDoc(data);
+        try {
+            result = await this.providers[0].getDocProvider(data);
+        }
+        catch (error) {
+            error;
         }
         cb(result);
         return result;
     }
-    async getOrcreateDoc(data, cb = () => { }) {
-        return this.findOrcreateDoc(data, cb);
-    }
     async getRaw(cb = () => { }) {
-        const data = await this.providers[0].getCollectionProvider(this.collectionName);
+        const data = await this.providers[0].getCollectionProvider(`${this.collectionName}`);
         cb(data);
         return data;
     }
-    async getDoc(data, cb = () => { }) {
-        return this.findDoc(data, cb);
-    }
     async updateDoc(refData, data, cb = () => { }) {
         const oldDoc = this.findDoc(refData);
+        if (!oldDoc) {
+            cb();
+            return;
+        }
         const storage = await this.providers[0].getCollectionProvider(this.collectionName);
         const index = storage.findIndex((doc) => doc === oldDoc);
         if (typeof data === "function")
@@ -112,11 +114,38 @@ class Docs {
             .forEach((atomic, i) => {
             data = _.defaultsDeep(this[atomic](oldDoc, data[atomic]), oldDoc);
         });
-        this.providers.forEach(async (provider) => {
-            await provider.updateDocProvider(refData, data);
-        });
+        try {
+            this.providers.forEach(async (provider) => {
+                await provider.updateDocProvider(refData, data);
+            });
+        }
+        catch (error) {
+            error;
+        }
         cb(storage[index]);
         return storage[index];
+    }
+    async updateRaw(refData, cb = () => { }) {
+        let data = this.findDoc(refData);
+        if (!data) {
+            cb();
+            return;
+        }
+        const self = this;
+        const func = {
+            ...data,
+            save: async function () {
+                try {
+                    delete this.save;
+                    await self.updateDoc(refData, this);
+                }
+                catch (error) {
+                    error;
+                }
+            },
+        };
+        cb(func);
+        return func;
     }
     $add(...data) {
         const deepMerge = (oldData, newData) => {

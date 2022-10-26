@@ -41,3 +41,8 @@ test.js
 package-lock.json
 old/
 databases/
+
+
+# Added by cargo
+
+/target

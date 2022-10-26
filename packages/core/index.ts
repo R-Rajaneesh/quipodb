@@ -5,23 +5,28 @@ interface constructorOptions {
   providers: providers[];
 }
 interface providers {
-  createCollectionProvider(collectionName: String, cb?: Function): void;
-  createDocProvider(data: document, cb?: Function): void;
-  deleteCollectionProvider(collectionName: String, cb?: Function): void;
-  deleteDocProvider(data: document | fn, cb?: Function): void;
-  getCollectionProvider(collectionName: String, cb?: Function): any[];
-  getDocProvider(data: document | fn, cb?: Function): any;
-  getCollectionsProvider(cb?: Function): Collection[];
-  updateDocProvider(refData: document | fn, data: document, cb?: Function): void;
+  createCollectionProvider(collectionName: String, cb?: Function): Promise<any> | any;
+  createDocProvider(data: document, cb?: Function): Promise<any> | any;
+  deleteCollectionProvider(collectionName: String, cb?: Function): Promise<any> | any;
+  deleteDocProvider(data: document | fn, cb?: Function): Promise<any> | any;
+  getCollectionProvider(collectionName: String, cb?: Function): Promise<any> | any;
+  getCollectionsProvider(cb?: Function): Promise<any> | any[];
+  getDocProvider(data: document | fn, cb?: Function): Promise<any> | any;
+  updateDocProvider(refData: document | fn, data: document, cb?: Function): Promise<any> | any;
+}
+interface updateRawCB {
+  save: Function;
 }
 interface Collection {
-  createDoc(data: document | fn, cb?: Function): any;
-  deleteDoc(data: document | fn, cb?: Function): any;
-  getDoc(data: document | fn, cb?: Function): any;
-  hasDoc(data: document | fn, cb?: Function): any;
+  createDoc(data: document | document[], cb?: Function): Promise<any> | any;
+  deleteDoc(data: document | fn, cb?: Function): Promise<any> | any;
+  findDoc(data: document | fn, cb?: Function): document;
+  hasDoc(data: document | fn, cb?: Function): boolean;
   getRaw(): any;
+  updateDoc(refData: document, data: document | fn, cb?: Function): Promise<any> | any;
+  updateRaw(refData: document | fn, cb?: Function): updateRawCB;
 }
-type fn = (data: Object[] | Object) => void;
+type fn = (data: Object[] | Object) => any;
 interface storage {
   [collection: string]: document[];
 }
@@ -39,33 +44,29 @@ export default class QuipoDB {
     this.providers = options.providers;
     this.storage = {};
     this.Docs = Docs;
-
-    // Time-To-Live
-    setInterval(() => {
-      this.providers.forEach(async (provider) => {
-        await provider.getCollectionsProvider().forEach(async (collectionName: any) => {
-          await provider.getCollectionProvider(collectionName).forEach(async (doc: document) => {
-            if (doc.ttl <= Date.now()) {
-              await provider.deleteDocProvider(doc);
-            }
-          });
-        });
-      });
-    }, 5000);
   }
   createCollection(collectionName: String, cb: Function = () => {}) {
     this.collectionName = collectionName;
-    this.providers.forEach(async (provider) => {
-      await provider.createCollectionProvider(collectionName, cb);
-    });
+    try {
+      this.providers.forEach(async (provider) => {
+        await provider.createCollectionProvider(collectionName, cb);
+      });
+    } catch (error) {
+      error;
+    }
     const docs = new this.Docs({ providers: this.providers, collectionName: this.collectionName });
+
     cb(docs);
     return docs;
   }
   deleteCollection(collectionName: String, cb: Function = () => {}) {
-    this.providers.forEach(async (provider) => {
-      await provider.deleteCollectionProvider(collectionName);
-    });
+    try {
+      this.providers.forEach(async (provider) => {
+        await provider.deleteCollectionProvider(collectionName);
+      });
+    } catch (error) {
+      error;
+    }
     cb();
     return;
   }
@@ -91,51 +92,54 @@ class Docs {
         });
       });
     }
-    this.providers.forEach(async (provider) => {
-      await provider.createDocProvider(data);
-    });
+    try {
+      this.providers.forEach(async (provider) => {
+        await provider.createDocProvider(data);
+      });
+    } catch (error) {
+      error;
+    }
     cb(data);
     return data;
   }
   public async deleteDoc(data: document | fn, cb: Function = () => {}) {
     if (typeof data === "function") data = data(await this.providers[0].getCollectionProvider(this.collectionName));
 
-    this.providers.forEach(async (provider) => {
-      await provider.deleteDocProvider(data);
-    });
+    try {
+      this.providers.forEach(async (provider) => {
+        await provider.deleteDocProvider(data);
+      });
+    } catch (error) {
+      error;
+    }
+    cb();
+    return;
   }
   public async findDoc(data: document | fn, cb: Function = () => {}) {
     let result: object = {};
     if (typeof data === "function") data = data(await this.providers[0].getCollectionProvider(this.collectionName)) ?? {};
-    result = await this.providers[0].getDocProvider(data);
-    cb(result);
-    return result;
-  }
-
-  public async findOrcreateDoc(data: document, cb: Function = () => {}) {
-    let result: document = {};
-    const Data = this.findDoc(data);
-    if (Data) result = Data;
-    else {
-      result = this.createDoc(data);
+    try {
+      result = await this.providers[0].getDocProvider(data);
+    } catch (error) {
+      error;
     }
     cb(result);
     return result;
   }
-  public async getOrcreateDoc(data: document, cb: Function = () => {}) {
-    return this.findOrcreateDoc(data, cb);
-  }
+
   public async getRaw(cb: Function = () => {}) {
-    const data = await this.providers[0].getCollectionProvider(this.collectionName);
+    const data = await this.providers[0].getCollectionProvider(`${this.collectionName}`);
 
     cb(data);
     return data;
   }
-  public async getDoc(data: document | fn | String, cb: Function = () => {}) {
-    return this.findDoc(data, cb);
-  }
+
   public async updateDoc(refData: document, data: document | fn, cb: Function = () => {}) {
     const oldDoc = this.findDoc(refData);
+    if (!oldDoc) {
+      cb();
+      return;
+    }
     const storage = await this.providers[0].getCollectionProvider(this.collectionName);
     const index = storage.findIndex((doc) => doc === oldDoc);
     if (typeof data === "function") data = data(storage[index]);
@@ -145,12 +149,38 @@ class Docs {
       .forEach((atomic, i) => {
         data = _.defaultsDeep(this[atomic](oldDoc, data[atomic]), oldDoc);
       });
-    this.providers.forEach(async (provider) => {
-      await provider.updateDocProvider(refData, data);
-    });
+    try {
+      this.providers.forEach(async (provider) => {
+        await provider.updateDocProvider(refData, data);
+      });
+    } catch (error) {
+      error;
+    }
     cb(storage[index]);
     return storage[index];
   }
+  public async updateRaw(refData: document, cb: Function = () => {}) {
+    let data = this.findDoc(refData);
+    if (!data) {
+      cb();
+      return;
+    }
+    const self = this;
+    const func: { save: Function; [x: string]: any } = {
+      ...data,
+      save: async function () {
+        try {
+          delete this.save;
+          await self.updateDoc(refData, this);
+        } catch (error) {
+          error;
+        }
+      },
+    };
+    cb(func);
+    return func;
+  }
+
   private $add(...data: Object[]) {
     const deepMerge = (oldData: any, newData: any) => {
       return Object.keys(oldData).reduce((acc, key) => {

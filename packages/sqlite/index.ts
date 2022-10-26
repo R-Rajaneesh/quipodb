@@ -17,28 +17,34 @@ export default class Sqlite {
   public sqlite: sqlite.Database;
   private options: sqliteConstructor;
   private collectionName: String;
-  primaryKey: any;
+  private primaryKey: String;
   constructor(options: sqliteConstructor) {
     this.options = options;
     this.options.path ??= "./databases/index.sqlite";
-    this.primaryKey = this.options.primaryKey;
-    if (!this.primaryKey) throw new QuipodbSqliteError("PRIMARY KEY is expected", "@quipodb/sqlite -> Missing property");
 
     try {
       fs.ensureFileSync(`${this.options.path}`);
-    } catch {}
+    } catch (error) {
+      error;
+    }
     this.sqlite = new sqlite(`${this.options.path}`, { fileMustExist: false });
   }
   createCollectionProvider(collectionName: String, cb: Function = () => {}) {
     this.collectionName = collectionName;
+    // if (!primaryKey) throw new QuipodbSqliteError("PRIMARY KEY is expected", "@quipodb/sqlite -> Missing property");
+    // this.primaryKey = primaryKey;
     try {
-      this.sqlite.prepare(`CREATE TABLE IF NOT EXISTS ${collectionName} (${this.primaryKey} NONE PRIMARY KEY NOT NULL)`).run();
-    } catch {}
+      this.sqlite.prepare(`CREATE TABLE IF NOT EXISTS ${collectionName} (_ID NONE PRIMARY KEY NOT NULL)`).run();
+    } catch (error) {
+      error;
+    }
   }
   private createColumnProvider(columnName: string, dataType: "TEXT" | "REAL" | "INTEGER" | "BLOB" | "NULL" | "NONE" = "NONE") {
     try {
       this.sqlite.prepare(`ALTER TABLE ${this.collectionName} ADD ${columnName} ${dataType}`).run();
-    } catch {}
+    } catch (error) {
+      error;
+    }
   }
   createDocProvider(data: document, cb: Function = () => {}) {
     const KEYS = Object.keys(data);
@@ -55,7 +61,9 @@ export default class Sqlite {
         this.updateDocProvider(this.getDocProvider(data), data);
         result = this.getDocProvider(data);
       }
-    } catch {}
+    } catch (error) {
+      error;
+    }
 
     cb(result);
 
@@ -67,7 +75,9 @@ export default class Sqlite {
     return;
   }
   deleteDocProvider(data: document, cb: Function = () => {}) {
-    this.sqlite.prepare(`DELETE FROM ${this.collectionName} WHERE ${this.primaryKey} = (?)`).run(this.getDocProvider(data)[this.primaryKey]);
+    const KEYS = Object.keys(data);
+    const VALUES = Object.values(data);
+    this.sqlite.prepare(`DELETE FROM ${this.collectionName} WHERE ${KEYS.map((k, i) => (k += ` = (?)`))}`).run(...VALUES);
     cb();
     return;
   }
@@ -84,9 +94,7 @@ export default class Sqlite {
       Object.values(result).forEach((val: any, index) => {
         result[Object.keys(result)[index]] = JSON.parse(val);
       });
-    } catch (e) {
-      console.log(e);
-    }
+    } catch {}
 
     cb(result);
 
@@ -110,7 +118,9 @@ export default class Sqlite {
 
     try {
       this.sqlite.prepare(`UPDATE ${this.collectionName} SET ${args} WHERE ${this.primaryKey} = ${refData[`${this.primaryKey}`]}`).run(...VALUES);
-    } catch {}
+    } catch (error) {
+      error;
+    }
   }
 }
 
