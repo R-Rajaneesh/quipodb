@@ -1,5 +1,6 @@
 interface constructorOptions {
     providers: providers[];
+    cache: Boolean;
 }
 interface providers {
     createCollectionProvider(collectionName: String, cb?: Function): Promise<any> | any;
@@ -18,9 +19,10 @@ interface storage {
 interface document {
     [key: string]: string | number | Object | Array<any> | any;
 }
-export default class QuipoDB {
+export declare class QuipoDB {
     options: constructorOptions;
     storage: storage;
+    cache: Boolean;
     collectionName: String;
     Docs: typeof Docs;
     providers: providers[];
@@ -31,11 +33,14 @@ export default class QuipoDB {
 interface DocsOptions {
     providers: providers[];
     collectionName: String;
+    storage: storage;
+    cache: Boolean;
 }
 declare class Docs {
     private options;
     private providers;
     private collectionName;
+    private storage;
     constructor(options: DocsOptions);
     createDoc(data: document | document[], cb?: Function): Promise<document>;
     deleteDoc(data: document | fn, cb?: Function): Promise<void>;
@@ -46,10 +51,65 @@ declare class Docs {
         [x: string]: any;
         save: Function;
     }>;
-    private $add;
-    private $subtract;
-    private $multiply;
-    private $divide;
-    private $push;
+    private _$add;
+    private _$subtract;
+    private _$multiply;
+    private _$divide;
+    private _$push;
+}
+export declare class Query {
+    private data;
+    private key;
+    private current;
+    private _limit;
+    constructor(Data: any[]);
+    add(val: number): this;
+    /**
+     * Gets back to the top level on the data
+     */
+    clearQuery(): this;
+    delete(key: string): this;
+    divide(val: number): this;
+    equals(val: any): this;
+    /**
+     * Check if the data exists on every object
+     */
+    exists(key: string): boolean;
+    find(key: string, val: any): void;
+    gt(val: any): this;
+    gte(val: any): this;
+    limit(val: number): this;
+    lt(val: any): this;
+    lte(val: any): this;
+    multiply(val: number): this;
+    push(arr: any[]): this;
+    /**
+     * Get the raw data
+     */
+    raw(): any[];
+    update(val: number): this;
+    /**
+     * Get into a deeper object
+     * @param {String} key
+     */
+    select(key: string): this;
+    subtract(val: number): this;
+    /**
+     * Saves the queries on the data
+     */
+    save(): this;
+    /**
+     * Get the Latest data
+     */
+    toJSON(): any[];
+    /**
+     * Get the last selected query
+     */
+    toValue(): any[];
+    /**
+     * Select a object to query next
+     * @param {string} key
+     */
+    where(key: string): this;
 }
 export {};
