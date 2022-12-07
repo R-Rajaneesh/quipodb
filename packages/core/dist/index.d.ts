@@ -12,7 +12,7 @@ interface providers {
     getDocProvider(data: document | fn, cb?: Function): Promise<any> | any;
     updateDocProvider(refData: document | fn, data: document, cb?: Function): Promise<any> | any;
 }
-declare type fn = (data: Object[] | Object) => any;
+type fn = (data: Object[] | Object) => any;
 interface storage {
     [collection: string]: document[];
 }
@@ -42,10 +42,12 @@ declare class Docs {
     private collectionName;
     private storage;
     constructor(options: DocsOptions);
-    createDoc(data: document | document[], cb?: Function): Promise<document>;
+    createDoc(data: document | document[], cb?: Function): Promise<document | document[]>;
     deleteDoc(data: document | fn, cb?: Function): Promise<void>;
     findDoc(data: document | fn, cb?: Function): Promise<object>;
     getRaw(cb?: Function): Promise<any>;
+    queryCollection(cb?: Function): Promise<Query>;
+    saveQuery(queryJSON: document[]): Promise<void>;
     updateDoc(refData: document, data: document | fn, cb?: Function): Promise<any>;
     updateRaw(refData: document, cb?: Function): Promise<{
         [x: string]: any;
@@ -62,7 +64,8 @@ export declare class Query {
     private key;
     private current;
     private _limit;
-    constructor(Data: any[]);
+    private old;
+    constructor(data: any[]);
     add(val: number): this;
     /**
      * Gets back to the top level on the data
@@ -87,7 +90,7 @@ export declare class Query {
      * Get the raw data
      */
     raw(): any[];
-    update(val: number): this;
+    update(val: any): this;
     /**
      * Get into a deeper object
      * @param {String} key
@@ -97,7 +100,7 @@ export declare class Query {
     /**
      * Saves the queries on the data
      */
-    save(): this;
+    save(): any[];
     /**
      * Get the Latest data
      */

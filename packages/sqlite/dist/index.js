@@ -1,6 +1,6 @@
 import sqlite from "better-sqlite3";
 import fs from "fs-extra";
-export default class Sqlite {
+class Sqlite {
     sqlite;
     options;
     collectionName;
@@ -8,23 +8,51 @@ export default class Sqlite {
     constructor(options) {
         this.options = options;
         this.options.path ??= "./databases/index.sqlite";
+        this.options.dev ??= false;
+        this.options.primaryKey ??= "_ID";
         try {
             fs.ensureFileSync(`${this.options.path}`);
         }
         catch (error) {
-            error;
+            if (this.options.dev)
+                console.log(error);
         }
         this.sqlite = new sqlite(`${this.options.path}`, { fileMustExist: false });
     }
-    createCollectionProvider(collectionName, cb = () => { }) {
+    mapValues(val, index, arr) {
+        const tv = typeof val;
+        if (Array.isArray(val) || tv === "object" || tv === "function" || tv === "symbol" || tv === "undefined" || tv === "string")
+            return JSON.stringify(val);
+        return val;
+    }
+    typeof(val) {
+        const tyof = typeof val;
+        if (tyof === "bigint")
+            return "INTEGER";
+        if (tyof === "number")
+            return "INTEGER";
+        if (tyof === "string")
+            return "TEXT";
+        if (tyof === "boolean")
+            return "NUMERIC";
+        if (tyof === "object")
+            return "BLOB";
+        if (tyof === "undefined")
+            return "NULL";
+        if (tyof === "function")
+            return "NONE";
+        if (tyof === "symbol")
+            return "NONE";
+        return "NONE";
+    }
+    createCollectionProvider(collectionName) {
         this.collectionName = collectionName;
-        // if (!primaryKey) throw new QuipodbSqliteError("PRIMARY KEY is expected", "@quipodb/sqlite -> Missing property");
-        // this.primaryKey = primaryKey;
         try {
-            this.sqlite.prepare(`CREATE TABLE IF NOT EXISTS ${collectionName} (_ID NONE PRIMARY KEY NOT NULL)`).run();
+            this.sqlite.prepare(`CREATE TABLE IF NOT EXISTS ${this.collectionName} (${this.options.primaryKey} NONE NOT NULL PRIMARY KEY)`).run();
         }
         catch (error) {
-            error;
+            if (this.options.dev)
+                console.log(error);
         }
     }
     createColumnProvider(columnName, dataType = "NONE") {
@@ -32,92 +60,107 @@ export default class Sqlite {
             this.sqlite.prepare(`ALTER TABLE ${this.collectionName} ADD ${columnName} ${dataType}`).run();
         }
         catch (error) {
-            error;
+            if (this.options.dev)
+                console.log(error);
         }
     }
-    createDocProvider(data, cb = () => { }) {
+    createDocProvider(data) {
         const KEYS = Object.keys(data);
-        let result;
-        const VALUES = Object.values(data).map((v) => JSON.stringify(v));
+        const VALUES = Object.values(data).map((v) => this.mapValues(v));
         const COLUMNS = this.sqlite.prepare(`PRAGMA table_info(${this.collectionName})`).all();
-        KEYS.forEach(async (key) => {
-            if (!COLUMNS.map((v) => v.name).includes(key))
-                this.createColumnProvider(key, "NONE");
-        });
         try {
-            if (!this.getDocProvider(data)) {
-                this.sqlite.prepare(`INSERT INTO ${this.collectionName} (${KEYS.join(", ")}) VALUES (${VALUES.map((v) => (v = "(?)")).join(",")})`).run(...VALUES);
+            const docs = this.getDocProvider(data);
+            if (!docs || docs.length === 0) {
+                KEYS.forEach((key, i) => {
+                    if (!COLUMNS.map((v) => v.name).includes(key))
+                        this.createColumnProvider(key, this.typeof(VALUES[i]));
+                });
+                this.sqlite.prepare(`INSERT INTO ${this.collectionName} (${KEYS.join(", ")}) VALUES (${VALUES.map((v) => (v = "(?)")).join(", ")})`).run(VALUES);
             }
             else {
-                this.updateDocProvider(this.getDocProvider(data), data);
-                result = this.getDocProvider(data);
+                if (docs === data)
+                    return;
+                this.updateDocProvider(docs, data);
             }
         }
         catch (error) {
-            error;
+            if (this.options.dev)
+                console.log(error);
         }
-        cb(result);
-        return result;
     }
-    deleteCollectionProvider(collectionName, cb = () => { }) {
-        this.sqlite.prepare(`DROP TABLE ${collectionName}`);
-        cb();
-        return;
-    }
-    deleteDocProvider(data, cb = () => { }) {
-        const KEYS = Object.keys(data);
-        const VALUES = Object.values(data);
-        this.sqlite.prepare(`DELETE FROM ${this.collectionName} WHERE ${KEYS.map((k, i) => (k += ` = (?)`))}`).run(...VALUES);
-        cb();
-        return;
-    }
-    getCollectionProvider(collectionName, cb = () => { }) {
-        const data = this.sqlite.prepare(`SELECT * FROM ${collectionName}`).all();
-        cb(data);
-        return data;
-    }
-    getDocProvider(data, cb = () => { }) {
-        const KEYS = Object.keys(data);
-        const VALUES = Object.values(data).map((v) => JSON.stringify(v));
-        const result = this.sqlite.prepare(`SELECT * from ${this.collectionName} WHERE ${KEYS.map((k, i) => (k += ` = (?)`))}`).get(...VALUES);
+    deleteCollectionProvider(collectionName) {
         try {
-            Object.values(result).forEach((val, index) => {
-                result[Object.keys(result)[index]] = JSON.parse(val);
-            });
-        }
-        catch { }
-        cb(result);
-        return result;
-    }
-    getCollectionsProvider(cb = () => { }) {
-        cb();
-        return this.sqlite
-            .prepare(`SELECT name FROM sqlite_master WHERE type='table'`)
-            .all()
-            .map((c) => c.name);
-    }
-    updateDocProvider(refData, data, cb = () => { }) {
-        const KEYS = Object.keys(data);
-        const VALUES = Object.values(data).map((v) => JSON.stringify(v));
-        const COLUMNS = this.sqlite.prepare(`PRAGMA table_info(${this.collectionName})`).all();
-        KEYS.forEach(async (key) => {
-            if (!COLUMNS.map((v) => v.name).includes(key))
-                this.createColumnProvider(key, "NONE");
-        });
-        const args = KEYS.map((v, i) => (v += ` = (?)`)).join(", ");
-        try {
-            this.sqlite.prepare(`UPDATE ${this.collectionName} SET ${args} WHERE ${this.primaryKey} = ${refData[`${this.primaryKey}`]}`).run(...VALUES);
+            this.sqlite.prepare(`DROP TABLE ${collectionName}`);
         }
         catch (error) {
-            error;
+            if (this.options.dev)
+                console.log(error);
+        }
+    }
+    deleteDocProvider(data) {
+        const KEYS = Object.keys(data);
+        const VALUES = Object.values(data).map((v) => this.mapValues(v));
+        this.sqlite.prepare(`DELETE FROM ${this.collectionName} WHERE ${KEYS.map((k, i) => (k += ` = (?)`))}`).run(VALUES);
+    }
+    getCollectionProvider(collectionName) {
+        const result = this.sqlite.prepare(`SELECT * FROM ${collectionName}`).all();
+        result.forEach((res, i) => {
+            Object.values(res).forEach((r, ri) => {
+                try {
+                    res[`${Object.keys(res)[ri]}`] = JSON.parse(r);
+                }
+                catch {
+                    res[`${Object.keys(res)[ri]}`] = r;
+                }
+            });
+            result[`${Object.keys(result)[i]}`] = res;
+        });
+        return result;
+    }
+    getCollectionsProvider() {
+        const result = this.sqlite.prepare(`SELECT name FROM sqlite_master WHERE type='table'`).all();
+        return result.map((c) => c.name);
+    }
+    getDocProvider(data) {
+        const KEYS = Object.keys(data);
+        const VALUES = Object.values(data).map((v) => this.mapValues(v));
+        let result;
+        try {
+            result = this.sqlite.prepare(`SELECT * FROM ${this.collectionName} WHERE ${KEYS.map((k) => (k += `=(?)`)).join(" AND ")}`).get(...VALUES);
+        }
+        catch (error) {
+            if (this.options.dev)
+                console.log(error);
+        }
+        if (!result)
+            return undefined;
+        Object.values(result).forEach((r, ri) => {
+            try {
+                result[`${Object.keys(result)[ri]}`] = JSON.parse(r);
+            }
+            catch {
+                result[`${Object.keys(result)[ri]}`] = r;
+            }
+        });
+        return result;
+    }
+    updateDocProvider(refData, data) {
+        const KEYS = Object.keys(data);
+        const VALUES = Object.values(data).map((v) => this.mapValues(v));
+        const COLUMNS = this.sqlite.prepare(`PRAGMA table_info(${this.collectionName})`).all();
+        KEYS.forEach(async (key, i) => {
+            if (!COLUMNS.map((v) => v.name).includes(key))
+                this.createColumnProvider(key, this.typeof(VALUES[i]));
+        });
+        const args = KEYS.map((v, i) => (v += ` = (?)`)).join(", ");
+        const Data = refData[`${this.options.primaryKey}`] ? refData : this.getDocProvider(refData);
+        try {
+            this.sqlite.prepare(`UPDATE ${this.collectionName} SET ${args} WHERE ${this.options.primaryKey} = (?)`).run(VALUES, Data[`${this.options.primaryKey}`]);
+        }
+        catch (error) {
+            if (this.options.dev)
+                console.log(error);
         }
     }
 }
-class QuipodbSqliteError extends Error {
-    constructor(message, name = null) {
-        super();
-        Error.captureStackTrace(this, this.constructor);
-        this.name = name ?? "@quipodb/sqlite";
-        this.message = message;
-    }
-}
+export default Sqlite;

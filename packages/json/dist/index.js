@@ -1,14 +1,15 @@
 import _ from "lodash";
 import fs from "fs-extra";
+import steno from "@quipodb/steno";
 export class JsonStore {
     collectionName;
     storage;
     constructor(options) {
-        this.storage = {};
         fs.ensureDirSync(options.path.replace(/.+(\.).+$/g, ""));
         fs.ensureFileSync(options.path);
+        this.storage = fs.readJSONSync(options.path) ?? {};
         setInterval(() => {
-            fs.writeFileSync(options.path, JSON.stringify(this.storage));
+            new steno(options.path).write(JSON.stringify(this.storage));
         }, 1000);
     }
     async createCollectionProvider(collectionName, cb = () => { }) {

@@ -51,7 +51,7 @@ export class QuipoDB {
     this.collectionName = collectionName;
     try {
       this.providers.forEach(async (provider) => {
-        await provider.createCollectionProvider(collectionName, cb);
+        await provider.createCollectionProvider(collectionName);
       });
       if (this.options.cache) this.storage[`${collectionName}`] = [];
     } catch (error) {
@@ -93,6 +93,7 @@ class Docs {
     this.storage = options.storage;
   }
   public async createDoc(data: document | document[], cb: Function = () => {}) {
+    try {
     if (Array.isArray(data)) {
       data.forEach((doc) => {
         this.providers.forEach(async (provider) => {
@@ -101,21 +102,20 @@ class Docs {
         if (this.options.cache) this.storage[`${this.collectionName}`].push(doc);
       });
     }
-    try {
       this.providers.forEach(async (provider) => {
         await provider.createDocProvider(data);
       });
       if (this.options.cache) this.storage[`${this.collectionName}`].push(data);
     } catch (error) {
-      error;
+      console.log(error);
     }
     cb(data);
     return data;
   }
   public async deleteDoc(data: document | fn, cb: Function = () => {}) {
+    try {
     if (typeof data === "function") data = data(await this.providers[0].getCollectionProvider(this.collectionName));
 
-    try {
       this.providers.forEach(async (provider) => {
         await provider.deleteDocProvider(data);
       });
@@ -144,9 +144,21 @@ class Docs {
 
   public async getRaw(cb: Function = () => {}) {
     const data = await this.providers[0].getCollectionProvider(`${this.collectionName}`);
-
     cb(data);
     return data;
+  }
+  public async queryCollection(cb: Function = () => {}) {
+    const query = new Query(await this.getRaw());
+    cb(query);
+    return query;
+  }
+  public async saveQuery(queryJSON: document[]) {
+    this.storage[`${this.collectionName}`] = queryJSON;
+    queryJSON.forEach((data) => {
+      const old = data._$old;
+      delete data._$old;
+      if (old !== data) this.updateDoc(this.findDoc(old), data);
+    });
   }
 
   public async updateDoc(refData: document, data: document | fn, cb: Function = () => {}) {
@@ -156,7 +168,7 @@ class Docs {
       return;
     }
     const storage = await this.providers[0].getCollectionProvider(this.collectionName);
-    const index = storage.findIndex((doc) => doc === oldDoc);
+    const index = storage.findIndex((doc: any) => doc === oldDoc);
     if (typeof data === "function") data = data(storage[index]);
 
     Object.keys(data)
@@ -276,9 +288,12 @@ export class Query {
   private key: string;
   private current: any[];
   private _limit: number;
-  constructor(Data: any[]) {
-    this.data = Data;
+  private old: any[];
+  constructor(data: any[]) {
+    this.old = JSON.parse(JSON.stringify(data));
+    this.data = data;
     this.key = "";
+
     this.current = this.data.map((v) => ({ ...v, _$current: v }));
   }
   public add(val: number) {
@@ -318,11 +333,10 @@ export class Query {
     return this.current.every((v) => v[key]);
   }
   public find(key: string, val: any) {
-      const res: any[] = [];
-      return this.current.forEach((v) => {
-        if (v._$current[key] === val) res.push(v);
-      });
-
+    const res: any[] = [];
+    return this.current.forEach((v) => {
+      if (v._$current[key] === val) res.push(v);
+    });
   }
   public gt(val: any) {
     this.current = this.current.filter((v, i) => v._$current[this.key] > val);
@@ -368,7 +382,7 @@ export class Query {
     const data = this.current.map((v) => (v = v._$current));
     return data;
   }
-  public update(val: number) {
+  public update(val: any) {
     this.current.forEach((d) => {
       d._$current[this.key] = val;
     });
@@ -395,15 +409,15 @@ export class Query {
    * Saves the queries on the data
    */
   public save() {
-    this.current = this.current.map((v) => (v = v._$current));
+    this.current = this.current.map((v, i) => (v = v._$current));
     this.data = this.current;
-    return this;
+    return this.data.map((v, i) => (v = { ...v, _$old: this.old.filter((V)=>V["_$ID"]===v["_$ID"])[0] }));
   }
   /**
    * Get the Latest data
    */
   public toJSON() {
-    return this.data;
+    return this.data.map((v, i) => ({ ...v, _$old: this.old.filter((V) => V["_$ID"] === v["_$ID"])[0] }));
   }
   /**
    * Get the last selected query

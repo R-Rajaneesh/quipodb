@@ -10,7 +10,7 @@ function getTempFilename(file: string): string {
 type Resolve = () => void;
 type Reject = (error: Error) => void;
 
-export class Writer {
+export default class Writer {
   #filename: string;
   #tempFilename: string;
   #locked = false;

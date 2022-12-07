@@ -46,3 +46,7 @@ databases/
 # Added by cargo
 
 /target
+laterex-firebase-adminsdk.json
+package-lock.json
+e.js
+test.js

@@ -5,7 +5,7 @@ import { basename, dirname, join } from "node:path";
 function getTempFilename(file) {
     return join(dirname(file), "." + basename(file) + ".tmp");
 }
-export class Writer {
+export default class Writer {
     #filename;
     #tempFilename;
     #locked = false;

@@ -17,7 +17,7 @@ export class QuipoDB {
         this.collectionName = collectionName;
         try {
             this.providers.forEach(async (provider) => {
-                await provider.createCollectionProvider(collectionName, cb);
+                await provider.createCollectionProvider(collectionName);
             });
             if (this.options.cache)
                 this.storage[`${collectionName}`] = [];
@@ -56,16 +56,16 @@ class Docs {
         this.storage = options.storage;
     }
     async createDoc(data, cb = () => { }) {
-        if (Array.isArray(data)) {
-            data.forEach((doc) => {
-                this.providers.forEach(async (provider) => {
-                    await provider.createDocProvider(doc);
-                });
-                if (this.options.cache)
-                    this.storage[`${this.collectionName}`].push(doc);
-            });
-        }
         try {
+            if (Array.isArray(data)) {
+                data.forEach((doc) => {
+                    this.providers.forEach(async (provider) => {
+                        await provider.createDocProvider(doc);
+                    });
+                    if (this.options.cache)
+                        this.storage[`${this.collectionName}`].push(doc);
+                });
+            }
             this.providers.forEach(async (provider) => {
                 await provider.createDocProvider(data);
             });
@@ -73,15 +73,15 @@ class Docs {
                 this.storage[`${this.collectionName}`].push(data);
         }
         catch (error) {
-            error;
+            console.log(error);
         }
         cb(data);
         return data;
     }
     async deleteDoc(data, cb = () => { }) {
-        if (typeof data === "function")
-            data = data(await this.providers[0].getCollectionProvider(this.collectionName));
         try {
+            if (typeof data === "function")
+                data = data(await this.providers[0].getCollectionProvider(this.collectionName));
             this.providers.forEach(async (provider) => {
                 await provider.deleteDocProvider(data);
             });
@@ -113,6 +113,20 @@ class Docs {
         const data = await this.providers[0].getCollectionProvider(`${this.collectionName}`);
         cb(data);
         return data;
+    }
+    async queryCollection(cb = () => { }) {
+        const query = new Query(await this.getRaw());
+        cb(query);
+        return query;
+    }
+    async saveQuery(queryJSON) {
+        this.storage[`${this.collectionName}`] = queryJSON;
+        queryJSON.forEach((data) => {
+            const old = data._$old;
+            delete data._$old;
+            if (old !== data)
+                this.updateDoc(this.findDoc(old), data);
+        });
     }
     async updateDoc(refData, data, cb = () => { }) {
         const oldDoc = this.findDoc(refData);
@@ -241,8 +255,10 @@ export class Query {
     key;
     current;
     _limit;
-    constructor(Data) {
-        this.data = Data;
+    old;
+    constructor(data) {
+        this.old = JSON.parse(JSON.stringify(data));
+        this.data = data;
         this.key = "";
         this.current = this.data.map((v) => ({ ...v, _$current: v }));
     }
@@ -357,15 +373,15 @@ export class Query {
      * Saves the queries on the data
      */
     save() {
-        this.current = this.current.map((v) => (v = v._$current));
+        this.current = this.current.map((v, i) => (v = v._$current));
         this.data = this.current;
-        return this;
+        return this.data.map((v, i) => (v = { ...v, _$old: this.old.filter((V) => V["_$ID"] === v["_$ID"])[0] }));
     }
     /**
      * Get the Latest data
      */
     toJSON() {
-        return this.data;
+        return this.data.map((v, i) => ({ ...v, _$old: this.old.filter((V) => V["_$ID"] === v["_$ID"])[0] }));
     }
     /**
      * Get the last selected query

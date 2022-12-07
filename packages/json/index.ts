@@ -1,5 +1,6 @@
 import _ from "lodash";
 import fs from "fs-extra";
+import steno from "@quipodb/steno";
 type fn = (data: Object[] | Object) => void;
 interface document {
   [key: string]: string | number | Object | Array<any> | any;
@@ -14,11 +15,11 @@ export class JsonStore {
   private collectionName: string;
   private storage: storage;
   constructor(options: JsonStoreOptions) {
-    this.storage = {};
     fs.ensureDirSync(options.path.replace(/.+(\.).+$/g, ""));
     fs.ensureFileSync(options.path);
+    this.storage = fs.readJSONSync(options.path) ?? {};
     setInterval(() => {
-      fs.writeFileSync(options.path, JSON.stringify(this.storage));
+      new steno(options.path).write(JSON.stringify(this.storage));
     }, 1000);
   }
   public async createCollectionProvider(collectionName: string, cb: Function = () => {}) {
