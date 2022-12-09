@@ -27,7 +27,18 @@ export declare class QuipoDB {
     Docs: typeof Docs;
     providers: providers[];
     constructor(options: constructorOptions);
+    /**
+     * Create a new collection
+     * @param {String} collectionName Provide a name to create a collection
+     * @param {Function} [cb] Callback with the docs
+     * @returns {Docs} The collection to interact with
+     */
     createCollection(collectionName: String, cb?: Function): Docs;
+    /**
+     * Delete a collection
+     * @param {String} collectionName Provide the name of collection to be deleted
+     * @param {Function} [cb] None
+     */
     deleteCollection(collectionName: String, cb?: Function): void;
 }
 interface DocsOptions {
@@ -42,17 +53,147 @@ declare class Docs {
     private collectionName;
     private storage;
     constructor(options: DocsOptions);
-    createDoc(data: document | document[], cb?: Function): Promise<document | document[]>;
-    deleteDoc(data: document | fn, cb?: Function): Promise<void>;
-    findDoc(data: document | fn, cb?: Function): Promise<object>;
-    getRaw(cb?: Function): Promise<any>;
+    /**
+     * @async
+     * @method
+     * Create a document in the collection
+     * ```js
+     * const db = new QuipoDB();
+     * const collection = db.createCollection("users");
+     * const data = {
+     *  author: "Rajaneesh R",
+     *  email: "rajaneeshr@proton.me"
+     * };
+     * await collection.createDoc(data);
+     * ```
+     * @param  {document|document[]} data The document to store as a object
+     * @param  {Function} cb
+     * @returns the `document`
+     */
+    createDoc(data: document | document[], cb?: Function): Promise<document | undefined>;
+    /**
+     * @async
+     * @method
+     * Deletes a document from the collection
+     * ```js
+     * const db = new QuipoDB();
+     * const collection = db.createCollection("users");
+     * const data = {
+     *  email: "rajaneeshr@proton.me"
+     * };
+     * await collection.deleteDoc(data);
+     * ```
+     * @param  {document|fn} data Document to delete
+     * @param  {Function} cb
+     * @returns `undefined`
+     */
+    deleteDoc(data: document | fn, cb?: Function): Promise<undefined>;
+    /**
+     * @async
+     * @method
+     * Finds the matching document
+     * ```js
+     * const db = new QuipoDB();
+     * const collection = db.createCollection("users");
+     * const data = {
+     *  email: "rajaneeshr@proton.me"
+     * };
+     * await collection.findDoc(data);
+     * ```
+     * @param  {document|fn} data The document to search for
+     * @param  {Function} cb
+     * @returns `document` or `undefined`
+     */
+    findDoc(data: document | fn, cb?: Function): Promise<document | undefined>;
+    /**
+     * @async
+     * @method
+     * Get the raw collection as json
+     * ```js
+     * const db = new QuipoDB();
+     * const collection = db.createCollection("users");
+     * const data = {
+     *  author: "Rajaneesh R",
+     *  email: "rajaneeshr@proton.me"
+     * };
+     * const raw = await collection.getRaw();
+     * // Use raw documents
+     * ```
+     * @param  {Function} cb
+     * @returns `document[]`
+     */
+    getRaw(cb?: Function): Promise<document[]>;
+    /**
+     * @async
+     * @method
+     * Query collection with chainable functions
+     * ```js
+     * const db = new QuipoDB();
+     * const collection = db.createCollection("users");
+     * const query = (await collection.queryCollection()).where("name").equals("Rajaneesh R").update("Rajaneesh.R").save();
+     * ```
+     * @param  {Function} cb
+     * @returns `Query`
+     */
     queryCollection(cb?: Function): Promise<Query>;
-    saveQuery(queryJSON: document[]): Promise<void>;
-    updateDoc(refData: document, data: document | fn, cb?: Function): Promise<any>;
+    /**
+     * @async
+     * @method
+     * Saves the query from the `.save()` function from the `Query`
+     * ```js
+     * const db = new QuipoDB();
+     * const collection = db.createCollection("users");
+     * const query = (await collection.queryCollection()).where("name").equals("Rajaneesh R").update("Rajaneesh.R").save();
+     * collection.saveQuery(query);
+     * ```
+     * @param  {document[]} queryJSON
+     * @returns `undefined`
+     */
+    saveQuery(queryJSON: document[]): Promise<undefined>;
+    /**
+     * @async
+     * @method
+     * Updates the document
+     * ```js
+     * const db = new QuipoDB();
+     * const collection = db.createCollection("users");
+     * const data = {
+     *  author: "Rajaneesh R"
+     * };
+     * const newData = {
+     *  email: "mail@example.com"
+     * }
+     * await collection.updateDoc(data, newData);
+     * ```
+     * @param  {document} refData The document to update
+     * @param  {document|fn} data The updated document
+     * @param  {Function} cb
+     * @returns `document` or `undefined`
+     */
+    updateDoc(refData: document, data: document | fn, cb?: Function): Promise<document | undefined>;
+    /**
+     * @async
+     * @method
+     * Update document as json and call `.save()` at the end to save it
+     * ```js
+     * const db = new QuipoDB();
+     * const collection = db.createCollection("users");
+     * const data = {
+     *  author: "Rajaneesh R",
+     *  email: "rajaneeshr@proton.me"
+     * };
+     * const raw = await collection.getRaw();
+     * raw.email = "email@example.com";
+     * raw.save();
+     * ```
+     * @param  {document} refData The document to update
+     * @param  {Function} cb
+     * @returns `document` or `undefined`
+     */
     updateRaw(refData: document, cb?: Function): Promise<{
-        [x: string]: any;
         save: Function;
-    }>;
+        [x: string]: any;
+    } | undefined>;
     private _$add;
     private _$subtract;
     private _$multiply;
@@ -79,13 +220,14 @@ export declare class Query {
      */
     exists(key: string): boolean;
     find(key: string, val: any): void;
-    gt(val: any): this;
-    gte(val: any): this;
+    gt(val: number): this;
+    gte(val: number): this;
     limit(val: number): this;
-    lt(val: any): this;
-    lte(val: any): this;
+    lt(val: number): this;
+    lte(val: number): this;
     multiply(val: number): this;
-    push(arr: any[]): this;
+    push(val: any): this;
+    splice(start: number, deleteCount?: number, items?: any[]): this;
     /**
      * Get the raw data
      */

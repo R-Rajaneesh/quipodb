@@ -47,7 +47,13 @@ export class QuipoDB {
     this.storage = {};
     this.Docs = Docs;
   }
-  createCollection(collectionName: String, cb: Function = () => {}) {
+  /**
+   * Create a new collection
+   * @param {String} collectionName Provide a name to create a collection
+   * @param {Function} [cb] Callback with the docs
+   * @returns {Docs} The collection to interact with
+   */
+  public createCollection(collectionName: String, cb: Function = () => {}): Docs {
     this.collectionName = collectionName;
     try {
       this.providers.forEach(async (provider) => {
@@ -62,7 +68,12 @@ export class QuipoDB {
     cb(docs);
     return docs;
   }
-  deleteCollection(collectionName: String, cb: Function = () => {}) {
+  /**
+   * Delete a collection
+   * @param {String} collectionName Provide the name of collection to be deleted
+   * @param {Function} [cb] None
+   */
+  public deleteCollection(collectionName: String, cb: Function = () => {}) {
     try {
       this.providers.forEach(async (provider) => {
         await provider.deleteCollectionProvider(collectionName);
@@ -92,16 +103,33 @@ class Docs {
     this.collectionName = options.collectionName;
     this.storage = options.storage;
   }
-  public async createDoc(data: document | document[], cb: Function = () => {}) {
+  /**
+   * @async
+   * @method
+   * Create a document in the collection
+   * ```js
+   * const db = new QuipoDB();
+   * const collection = db.createCollection("users");
+   * const data = {
+   *  author: "Rajaneesh R",
+   *  email: "rajaneeshr@proton.me"
+   * };
+   * await collection.createDoc(data);
+   * ```
+   * @param  {document|document[]} data The document to store as a object
+   * @param  {Function} cb
+   * @returns the `document`
+   */
+  public async createDoc(data: document | document[], cb: Function = () => {}): Promise<document | undefined> {
     try {
-    if (Array.isArray(data)) {
-      data.forEach((doc) => {
-        this.providers.forEach(async (provider) => {
-          await provider.createDocProvider(doc);
+      if (Array.isArray(data)) {
+        data.forEach((doc) => {
+          this.providers.forEach(async (provider) => {
+            await provider.createDocProvider(doc);
+          });
+          if (this.options.cache) this.storage[`${this.collectionName}`].push(doc);
         });
-        if (this.options.cache) this.storage[`${this.collectionName}`].push(doc);
-      });
-    }
+      }
       this.providers.forEach(async (provider) => {
         await provider.createDocProvider(data);
       });
@@ -112,9 +140,25 @@ class Docs {
     cb(data);
     return data;
   }
-  public async deleteDoc(data: document | fn, cb: Function = () => {}) {
+  /**
+   * @async
+   * @method
+   * Deletes a document from the collection
+   * ```js
+   * const db = new QuipoDB();
+   * const collection = db.createCollection("users");
+   * const data = {
+   *  email: "rajaneeshr@proton.me"
+   * };
+   * await collection.deleteDoc(data);
+   * ```
+   * @param  {document|fn} data Document to delete
+   * @param  {Function} cb
+   * @returns `undefined`
+   */
+  public async deleteDoc(data: document | fn, cb: Function = () => {}): Promise<undefined> {
     try {
-    if (typeof data === "function") data = data(await this.providers[0].getCollectionProvider(this.collectionName));
+      if (typeof data === "function") data = data(await this.providers[0].getCollectionProvider(this.collectionName));
 
       this.providers.forEach(async (provider) => {
         await provider.deleteDocProvider(data);
@@ -129,8 +173,24 @@ class Docs {
     cb();
     return;
   }
-  public async findDoc(data: document | fn, cb: Function = () => {}) {
-    let result: object = {};
+  /**
+   * @async
+   * @method
+   * Finds the matching document
+   * ```js
+   * const db = new QuipoDB();
+   * const collection = db.createCollection("users");
+   * const data = {
+   *  email: "rajaneeshr@proton.me"
+   * };
+   * await collection.findDoc(data);
+   * ```
+   * @param  {document|fn} data The document to search for
+   * @param  {Function} cb
+   * @returns `document` or `undefined`
+   */
+  public async findDoc(data: document | fn, cb: Function = () => {}): Promise<document | undefined> {
+    let result: object | undefined = undefined;
     if (typeof data === "function") data = data(await this.providers[0].getCollectionProvider(this.collectionName)) ?? {};
     try {
       const Data = await this.providers[0].getDocProvider(data);
@@ -141,28 +201,89 @@ class Docs {
     cb(result);
     return result;
   }
-
-  public async getRaw(cb: Function = () => {}) {
+  /**
+   * @async
+   * @method
+   * Get the raw collection as json
+   * ```js
+   * const db = new QuipoDB();
+   * const collection = db.createCollection("users");
+   * const data = {
+   *  author: "Rajaneesh R",
+   *  email: "rajaneeshr@proton.me"
+   * };
+   * const raw = await collection.getRaw();
+   * // Use raw documents
+   * ```
+   * @param  {Function} cb
+   * @returns `document[]`
+   */
+  public async getRaw(cb: Function = () => {}): Promise<document[]> {
     const data = await this.providers[0].getCollectionProvider(`${this.collectionName}`);
     cb(data);
     return data;
   }
-  public async queryCollection(cb: Function = () => {}) {
+  /**
+   * @async
+   * @method
+   * Query collection with chainable functions
+   * ```js
+   * const db = new QuipoDB();
+   * const collection = db.createCollection("users");
+   * const query = (await collection.queryCollection()).where("name").equals("Rajaneesh R").update("Rajaneesh.R").save();
+   * ```
+   * @param  {Function} cb
+   * @returns `Query`
+   */
+  public async queryCollection(cb: Function = () => {}): Promise<Query> {
     const query = new Query(await this.getRaw());
     cb(query);
     return query;
   }
-  public async saveQuery(queryJSON: document[]) {
-    this.storage[`${this.collectionName}`] = queryJSON;
+  /**
+   * @async
+   * @method
+   * Saves the query from the `.save()` function from the `Query`
+   * ```js
+   * const db = new QuipoDB();
+   * const collection = db.createCollection("users");
+   * const query = (await collection.queryCollection()).where("name").equals("Rajaneesh R").update("Rajaneesh.R").save();
+   * collection.saveQuery(query);
+   * ```
+   * @param  {document[]} queryJSON
+   * @returns `undefined`
+   */
+  public async saveQuery(queryJSON: document[]): Promise<undefined> {
+    if (this.options.cache) this.storage[`${this.collectionName}`] = queryJSON;
     queryJSON.forEach((data) => {
       const old = data._$old;
       delete data._$old;
-      if (old !== data) this.updateDoc(this.findDoc(old), data);
+      if (old !== data) this.updateDoc(old, data);
     });
+    return;
   }
-
-  public async updateDoc(refData: document, data: document | fn, cb: Function = () => {}) {
-    const oldDoc = this.findDoc(refData);
+  /**
+   * @async
+   * @method
+   * Updates the document
+   * ```js
+   * const db = new QuipoDB();
+   * const collection = db.createCollection("users");
+   * const data = {
+   *  author: "Rajaneesh R"
+   * };
+   * const newData = {
+   *  email: "mail@example.com"
+   * }
+   * await collection.updateDoc(data, newData);
+   * ```
+   * @param  {document} refData The document to update
+   * @param  {document|fn} data The updated document
+   * @param  {Function} cb
+   * @returns `document` or `undefined`
+   */
+  public async updateDoc(refData: document, data: document | fn, cb: Function = () => {}): Promise<document | undefined> {
+    const oldDoc = refData;
     if (!oldDoc) {
       cb();
       return;
@@ -178,16 +299,35 @@ class Docs {
       });
     try {
       this.providers.forEach(async (provider) => {
-        await provider.updateDocProvider(refData, data);
+        await provider.updateDocProvider(oldDoc, data);
       });
-      this.storage[`${this.collectionName}`][_.findIndex(this.storage[`${this.collectionName}`], refData)] = data;
+      if (this.options.cache) this.storage[`${this.collectionName}`][_.findIndex(this.storage[`${this.collectionName}`], oldDoc)] = data;
     } catch (error) {
       error;
     }
     cb(storage[index]);
     return storage[index];
   }
-  public async updateRaw(refData: document, cb: Function = () => {}) {
+  /**
+   * @async
+   * @method
+   * Update document as json and call `.save()` at the end to save it
+   * ```js
+   * const db = new QuipoDB();
+   * const collection = db.createCollection("users");
+   * const data = {
+   *  author: "Rajaneesh R",
+   *  email: "rajaneeshr@proton.me"
+   * };
+   * const raw = await collection.getRaw();
+   * raw.email = "email@example.com";
+   * raw.save();
+   * ```
+   * @param  {document} refData The document to update
+   * @param  {Function} cb
+   * @returns `document` or `undefined`
+   */
+  public async updateRaw(refData: document, cb: Function = () => {}): Promise<{ save: Function; [x: string]: any } | undefined> {
     let data = this.findDoc(refData);
     if (!data) {
       cb();
@@ -200,7 +340,7 @@ class Docs {
         try {
           delete this.save;
           await self.updateDoc(refData, this);
-          this.storage[`${this.collectionName}`][_.findIndex(this.storage[`${this.collectionName}`], refData)] = this;
+          if (this.options.cache) this.storage[`${this.collectionName}`][_.findIndex(this.storage[`${this.collectionName}`], refData)] = this;
         } catch (error) {
           error;
         }
@@ -291,10 +431,9 @@ export class Query {
   private old: any[];
   constructor(data: any[]) {
     this.old = JSON.parse(JSON.stringify(data));
-    this.data = data;
+    this.data = data.map((v, i) => ({ ...v, _$current: v, _$old: this.old[i] }));
     this.key = "";
-
-    this.current = this.data.map((v) => ({ ...v, _$current: v }));
+    this.current = this.data.map((v, i) => ({ ...v, _$current: v, _$old: this.old[i] }));
   }
   public add(val: number) {
     this.current.forEach((d) => {
@@ -306,12 +445,13 @@ export class Query {
    * Gets back to the top level on the data
    */
   public clearQuery() {
-    this.current = this.data.map((v) => ({ ...v, _$current: v }));
+    this.current = this.data.map((v, i) => ({ ...v, _$current: v, _$old: this.old[i] }));
     return this;
   }
   public delete(key: string) {
     this.current = this.current.map((v, i) => {
       delete v._$current[key];
+      v._$old = v;
       return (v = v);
     });
     return this;
@@ -338,25 +478,25 @@ export class Query {
       if (v._$current[key] === val) res.push(v);
     });
   }
-  public gt(val: any) {
+  public gt(val: number) {
     this.current = this.current.filter((v, i) => v._$current[this.key] > val);
     return this;
   }
-  public gte(val: any) {
+  public gte(val: number) {
     this.current = this.current.filter((v, i) => v._$current[this.key] >= val);
     return this;
   }
   public limit(val: number) {
-    this._limit = val + 1;
+    this._limit = val;
     return this;
   }
 
-  public lt(val: any) {
+  public lt(val: number) {
     this.current = this.current.filter((v, i) => v._$current[this.key] < val);
     return this;
   }
 
-  public lte(val: any) {
+  public lte(val: number) {
     this.current = this.current.filter((v, i) => v._$current[this.key] <= val);
     return this;
   }
@@ -367,12 +507,17 @@ export class Query {
     });
     return this;
   }
-  public push(arr: any[]) {
-    arr.forEach((val) => {
-      this.current.forEach((d) => {
-        if (Array.isArray(d._$current[this.key])) d._$current[this.key].push(val);
-      });
+  public push(val: any) {
+    this.current.forEach((d) => {
+      if (Array.isArray(d._$current[this.key])) d._$current[this.key].push(val);
     });
+    return this;
+  }
+  public splice(start: number, deleteCount?: number, items?: any[]) {
+    this.current.forEach((d) => {
+      if (Array.isArray(d._$current[this.key])) d._$current[this.key].splice(start, deleteCount, items);
+    });
+
     return this;
   }
   /**
@@ -409,25 +554,37 @@ export class Query {
    * Saves the queries on the data
    */
   public save() {
-    this.current = this.current.map((v, i) => (v = v._$current));
+    this.current = this.current.map((v, i) => (v = { ...v._$current }));
     this.data = this.current;
-    return this.data.map((v, i) => (v = { ...v, _$old: this.old.filter((V)=>V["_$ID"]===v["_$ID"])[0] }));
+    const res = this.data.map((v, i) => {
+      delete v["_$old"]["_$current"];
+      delete v["_$current"];
+      return (v = { ...v });
+    });
+    return res;
   }
   /**
    * Get the Latest data
    */
   public toJSON() {
-    return this.data.map((v, i) => ({ ...v, _$old: this.old.filter((V) => V["_$ID"] === v["_$ID"])[0] }));
+    return this.data.map((v, i) => ({ ...v }));
   }
   /**
    * Get the last selected query
    */
   public toValue() {
-    return this.current.map((v, i) => {
-      if (this._limit < i) return;
-      if (v._$current) delete v._$current;
-      return (v = v);
-    });
+    return this.current
+      .map((v, i) => {
+        if (i + 1 > this._limit) {
+          if (v._$current) {
+            v = { ...v._$current, _$old: v._$old };
+            delete v._$current;
+          }
+          v._$old = v._$old;
+          return (v = v);
+        }
+      })
+      .filter((v) => v !== undefined || null);
   }
   /**
    * Select a object to query next

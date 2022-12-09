@@ -49,4 +49,4 @@ databases/
 laterex-firebase-adminsdk.json
 package-lock.json
 e.js
-test.js
+test.*
