@@ -22,7 +22,6 @@ interface Collection {
   createDoc(data: document | document[], cb?: Function): Promise<any> | any;
   deleteDoc(data: document | fn, cb?: Function): Promise<any> | any;
   findDoc(data: document | fn, cb?: Function): document;
-  hasDoc(data: document | fn, cb?: Function): boolean;
   getRaw(): any;
   updateDoc(refData: document, data: document | fn, cb?: Function): Promise<any> | any;
   updateRaw(refData: document | fn, cb?: Function): updateRawCB;

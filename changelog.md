@@ -1,21 +1,11 @@
-## 0.0.1.beta-0
-
-- First release named dat-db
-
-## 0.0.2.beta-0
-
-- Renamed from dat-db to quipodb
-- Added a readme
-- Added document
-- Added changelogs
-- Added a nice logo (stole it from flaticon)
-
 ## 1.0.0
 
-- Changed `setDoc` to `createDoc`
-- Added `hasDoc`
-- Moved DB function into a new class
+- First release of @quipodb/core, @quipodb/sqlite, @quipodb/firestore, @quipodb/json
 
 ## 1.0.1
 
-- Added atomic setters for `updateDoc`
+- Fixed bug in @quipodb/json that will not update the data
+
+## 1.0.2
+
+- Fixed bug in @quipodb/sqlite where `updateDoc` command does not update the data

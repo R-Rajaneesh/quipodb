@@ -1,16 +1,31 @@
 import _ from "lodash";
 import fs from "fs-extra";
-import steno from "@quipodb/steno";
 export class JsonStore {
     collectionName;
     storage;
     constructor(options) {
-        fs.ensureDirSync(options.path.replace(/.+(\.).+$/g, ""));
-        fs.ensureFileSync(options.path);
-        this.storage = fs.readJSONSync(options.path) ?? {};
-        setInterval(() => {
-            new steno(options.path).write(JSON.stringify(this.storage));
-        }, 1000);
+        if (!fs.existsSync(options.path)) {
+            if (options.path.replace(/.+(\.).+$/g, ""))
+                fs.ensureDirSync(options.path.replace(/.+(\.).+$/g, ""));
+            fs.ensureFileSync(options.path);
+            fs.writeJSONSync(options.path, {});
+        }
+        try {
+            this.storage = fs.readJSONSync(options.path) ?? {};
+        }
+        catch {
+            fs.writeJSONSync(options.path, {});
+            this.storage = fs.readJSONSync(options.path) ?? {};
+        }
+        process
+            .prependListener("exit", (code) => {
+            fs.writeJSONSync(options.path, this.storage);
+            process.exit(1);
+        })
+            .prependListener("beforeExit", (code) => {
+            fs.writeJSONSync(options.path, this.storage);
+            process.exit(1);
+        });
     }
     async createCollectionProvider(collectionName, cb = () => { }) {
         this.collectionName = collectionName;

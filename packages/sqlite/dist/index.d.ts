@@ -9,8 +9,8 @@ interface document {
 }
 declare class Sqlite {
     sqlite: sqlite.Database;
-    options: sqliteConstructor;
-    collectionName: String;
+    private options;
+    private collectionName;
     primaryKey: String;
     constructor(options: sqliteConstructor);
     private mapValues;

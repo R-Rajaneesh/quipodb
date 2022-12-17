@@ -77,11 +77,6 @@ class Sqlite {
                 });
                 this.sqlite.prepare(`INSERT INTO ${this.collectionName} (${KEYS.join(", ")}) VALUES (${VALUES.map((v) => (v = "(?)")).join(", ")})`).run(VALUES);
             }
-            else {
-                if (docs === data)
-                    return;
-                this.updateDocProvider(docs, data);
-            }
         }
         catch (error) {
             if (this.options.dev)
@@ -107,6 +102,8 @@ class Sqlite {
         result.forEach((res, i) => {
             Object.values(res).forEach((r, ri) => {
                 try {
+                    if (typeof r === "string" && r.startsWith("'") && r.endsWith("'"))
+                        r = r.replace("'", "").split("").reverse().join("").replace("'", "").split("").reverse().join("");
                     res[`${Object.keys(res)[ri]}`] = JSON.parse(r);
                 }
                 catch {
@@ -136,6 +133,8 @@ class Sqlite {
             return undefined;
         Object.values(result).forEach((r, ri) => {
             try {
+                if (typeof r === "string" && r.startsWith("'") && r.endsWith("'"))
+                    r = r.replace("'", "").split("").reverse().join("").replace("'", "").split("").reverse().join("");
                 result[`${Object.keys(result)[ri]}`] = JSON.parse(r);
             }
             catch {

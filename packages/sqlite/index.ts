@@ -13,10 +13,10 @@ interface storage {
   [collectioName: string]: document[];
 }
 class Sqlite {
-  sqlite: sqlite.Database;
-  options: sqliteConstructor;
-  collectionName: String;
-  primaryKey: String;
+  public sqlite: sqlite.Database;
+  private options: sqliteConstructor;
+  private collectionName: String;
+  public primaryKey: String;
   constructor(options: sqliteConstructor) {
     this.options = options;
     this.options.path ??= "./databases/index.sqlite";
@@ -73,9 +73,6 @@ class Sqlite {
           if (!COLUMNS.map((v: any) => v.name).includes(key)) this.createColumnProvider(key, this.typeof(VALUES[i]));
         });
         this.sqlite.prepare(`INSERT INTO ${this.collectionName} (${KEYS.join(", ")}) VALUES (${VALUES.map((v) => (v = "(?)")).join(", ")})`).run(VALUES);
-      } else {
-        if (docs === data) return;
-        this.updateDocProvider(docs, data);
       }
     } catch (error) {
       if (this.options.dev) console.log(error);
@@ -98,6 +95,8 @@ class Sqlite {
     result.forEach((res: Object, i: number) => {
       Object.values(res).forEach((r: any, ri: number) => {
         try {
+          if (typeof r === "string" && r.startsWith("'") && r.endsWith("'"))
+            r = r.replace("'", "").split("").reverse().join("").replace("'", "").split("").reverse().join("");
           res[`${Object.keys(res)[ri]}`] = JSON.parse(r);
         } catch {
           res[`${Object.keys(res)[ri]}`] = r;
@@ -123,6 +122,8 @@ class Sqlite {
     if (!result) return undefined;
     Object.values(result).forEach((r: any, ri: number) => {
       try {
+        if (typeof r === "string" && r.startsWith("'") && r.endsWith("'"))
+          r = r.replace("'", "").split("").reverse().join("").replace("'", "").split("").reverse().join("");
         result[`${Object.keys(result)[ri]}`] = JSON.parse(r);
       } catch {
         result[`${Object.keys(result)[ri]}`] = r;
