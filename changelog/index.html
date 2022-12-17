@@ -9,28 +9,28 @@
     <!-- Primary Meta Tags -->
     <title>Changelog</title>
     <meta name="title" content="Changelog">
-    <meta name="description" content="First release named dat-db" />
+    <meta name="description" content="First release of @quipodb/core, @quipodb/sqlite, @quipodb/firestore, @quipodb/json" />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://R-Rajaneesh.github.io/quipodb/changelog/">
     <meta property="og:title" content="Changelog">
-    <meta property="og:description" content="First release named dat-db">
+    <meta property="og:description" content="First release of @quipodb/core, @quipodb/sqlite, @quipodb/firestore, @quipodb/json">
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="https://R-Rajaneesh.github.io/quipodb/changelog/">
     <meta property="twitter:title" content="Changelog">
-    <meta property="twitter:description" content="First release named dat-db">
+    <meta property="twitter:description" content="First release of @quipodb/core, @quipodb/sqlite, @quipodb/firestore, @quipodb/json">
     
     <script>(function () { var el = document.documentElement, m = localStorage.getItem("/quipodb/doc_theme"), wm = window.matchMedia; if (m === "dark" || (!m && wm && wm("(prefers-color-scheme: dark)").matches)) { el.classList.add("dark") } else { el.classList.remove("dark") } })();</script>
 
     <link href="/quipodb/favicon.png" rel="icon" />
-    <link href="/quipodb/resources/css/retype.css?v=1.11.2.723919940400" rel="stylesheet" data-turbo-track="reload" />
+    <link href="/quipodb/resources/css/retype.css?v=1.11.2.724597742189" rel="stylesheet" data-turbo-track="reload" />
 
-    <script type="text/javascript" src="/quipodb/resources/js/config.js?v=1.11.2.723919940400" defer data-turbo-track="reload"></script>
+    <script type="text/javascript" src="/quipodb/resources/js/config.js?v=1.11.2.724597742189" defer data-turbo-track="reload"></script>
     <script type="text/javascript" src="/quipodb/resources/js/retype.js?v=1.11.2" defer data-turbo-track="reload"></script>
-    <script id="lunr-js" type="text/javascript" src="/quipodb/resources/js/lunr.js?v=1.11.2.723919940400" defer></script>
+    <script id="lunr-js" type="text/javascript" src="/quipodb/resources/js/lunr.js?v=1.11.2.724597742189" defer></script>
 </head>
     <body>
         <div id="docs-app" class="relative text-base antialiased text-gray-700 bg-white font-body dark:bg-dark-850 dark:text-dark-300">
@@ -212,28 +212,6 @@
         <span>Changelog</span>
     </h1>
 </doc-anchor-target>
-<doc-anchor-target id="001beta-0">
-    <h2>
-        <doc-anchor-trigger class="header-anchor-trigger" to="#001beta-0">#</doc-anchor-trigger>
-        <span>0.0.1.beta-0</span>
-    </h2>
-</doc-anchor-target>
-<ul>
-<li>First release named dat-db</li>
-</ul>
-<doc-anchor-target id="002beta-0">
-    <h2>
-        <doc-anchor-trigger class="header-anchor-trigger" to="#002beta-0">#</doc-anchor-trigger>
-        <span>0.0.2.beta-0</span>
-    </h2>
-</doc-anchor-target>
-<ul>
-<li>Renamed from dat-db to quipodb</li>
-<li>Added a readme</li>
-<li>Added document</li>
-<li>Added changelogs</li>
-<li>Added a nice logo (stole it from flaticon)</li>
-</ul>
 <doc-anchor-target id="100">
     <h2>
         <doc-anchor-trigger class="header-anchor-trigger" to="#100">#</doc-anchor-trigger>
@@ -241,9 +219,7 @@
     </h2>
 </doc-anchor-target>
 <ul>
-<li>Changed <code v-pre>setDoc</code> to <code v-pre>createDoc</code></li>
-<li>Added <code v-pre>hasDoc</code></li>
-<li>Moved DB function into a new class</li>
+<li>First release of @quipodb/core, @quipodb/sqlite, @quipodb/firestore, @quipodb/json</li>
 </ul>
 <doc-anchor-target id="101">
     <h2>
@@ -252,7 +228,16 @@
     </h2>
 </doc-anchor-target>
 <ul>
-<li>Added atomic setters for <code v-pre>updateDoc</code></li>
+<li>Fixed bug in @quipodb/json that will not update the data</li>
+</ul>
+<doc-anchor-target id="102">
+    <h2>
+        <doc-anchor-trigger class="header-anchor-trigger" to="#102">#</doc-anchor-trigger>
+        <span>1.0.2</span>
+    </h2>
+</doc-anchor-target>
+<ul>
+<li>Fixed bug in @quipodb/sqlite where <code v-pre>updateDoc</code> command does not update the data</li>
 </ul>
 
 
