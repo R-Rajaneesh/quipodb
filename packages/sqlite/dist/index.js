@@ -154,7 +154,7 @@ class Sqlite {
         const args = KEYS.map((v, i) => (v += ` = (?)`)).join(", ");
         const Data = refData[`${this.options.primaryKey}`] ? refData : this.getDocProvider(collectionName, refData);
         try {
-            this.sqlite.prepare(`UPDATE ${collectionName} SET ${args} WHERE ${this.options.primaryKey} = (?)`).run(VALUES, Data[`${this.options.primaryKey}`]);
+            this.sqlite.prepare(`UPDATE ${collectionName} SET ${args} WHERE ${this.options.primaryKey} = (?)`).run(VALUES, JSON.stringify(Data[`${this.options.primaryKey}`]));
         }
         catch (error) {
             if (this.options.dev)
