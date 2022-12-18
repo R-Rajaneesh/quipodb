@@ -7,13 +7,13 @@ interface constructorOptions {
 }
 interface providers {
   createCollectionProvider(collectionName: String, cb?: Function): Promise<any> | any;
-  createDocProvider(data: document, cb?: Function): Promise<any> | any;
+  createDocProvider(collectionName: String, data: document, cb?: Function): Promise<any> | any;
   deleteCollectionProvider(collectionName: String, cb?: Function): Promise<any> | any;
-  deleteDocProvider(data: document | fn, cb?: Function): Promise<any> | any;
+  deleteDocProvider(collectionName: String, data: document | fn, cb?: Function): Promise<any> | any;
   getCollectionProvider(collectionName: String, cb?: Function): Promise<any> | any;
   getCollectionsProvider(cb?: Function): Promise<any> | any[];
-  getDocProvider(data: document | fn, cb?: Function): Promise<any> | any;
-  updateDocProvider(refData: document | fn, data: document, cb?: Function): Promise<any> | any;
+  getDocProvider(collectionName: String, data: document | fn, cb?: Function): Promise<any> | any;
+  updateDocProvider(collectionName: String, refData: document | fn, data: document, cb?: Function): Promise<any> | any;
 }
 interface updateRawCB {
   save: Function;
@@ -53,7 +53,6 @@ export class QuipoDB {
    * @returns {Docs} The collection to interact with
    */
   public createCollection(collectionName: String, cb: Function = () => {}): Docs {
-    this.collectionName = collectionName;
     try {
       this.providers.forEach(async (provider) => {
         await provider.createCollectionProvider(collectionName);
@@ -62,8 +61,7 @@ export class QuipoDB {
     } catch (error) {
       error;
     }
-    const docs = new this.Docs({ providers: this.providers, collectionName: this.collectionName, storage: this.storage, cache: this.options.cache });
-
+    let docs = new this.Docs({ providers: this.providers, collectionName: `${collectionName}`, storage: this.storage, cache: this.options.cache });
     cb(docs);
     return docs;
   }
@@ -87,14 +85,14 @@ export class QuipoDB {
 }
 interface DocsOptions {
   providers: providers[];
-  collectionName: String;
+  collectionName: string;
   storage: storage;
   cache: Boolean;
 }
-class Docs {
+export class Docs {
   private options: any;
   private providers: providers[];
-  private collectionName: String;
+  private collectionName: string;
   private storage: storage;
   constructor(options: DocsOptions) {
     this.options = options;
@@ -124,13 +122,13 @@ class Docs {
       if (Array.isArray(data)) {
         data.forEach((doc) => {
           this.providers.forEach(async (provider) => {
-            await provider.createDocProvider(doc);
+            await provider.createDocProvider(this.collectionName,doc);
           });
           if (this.options.cache) this.storage[`${this.collectionName}`].push(doc);
         });
       }
       this.providers.forEach(async (provider) => {
-        await provider.createDocProvider(data);
+        await provider.createDocProvider(this.collectionName, data);
       });
       if (this.options.cache) this.storage[`${this.collectionName}`].push(data);
     } catch (error) {
@@ -160,7 +158,7 @@ class Docs {
       if (typeof data === "function") data = data(await this.providers[0].getCollectionProvider(this.collectionName));
 
       this.providers.forEach(async (provider) => {
-        await provider.deleteDocProvider(data);
+        await provider.deleteDocProvider(this.collectionName, data);
       });
 
       if (this.options.cache) {
@@ -192,7 +190,7 @@ class Docs {
     let result: object | undefined = undefined;
     if (typeof data === "function") data = data(await this.providers[0].getCollectionProvider(this.collectionName)) ?? {};
     try {
-      const Data = await this.providers[0].getDocProvider(data);
+      const Data = await this.providers[0].getDocProvider(this.collectionName, data);
       result = this.options.cache ? _.find(this.storage[`${this.collectionName}`], data) ?? Data : Data;
     } catch (error) {
       error;
@@ -298,7 +296,7 @@ class Docs {
       });
     try {
       this.providers.forEach(async (provider) => {
-        await provider.updateDocProvider(oldDoc, data);
+        await provider.updateDocProvider(this.collectionName, oldDoc, data);
       });
       if (this.options.cache) this.storage[`${this.collectionName}`][_.findIndex(this.storage[`${this.collectionName}`], oldDoc)] = data;
     } catch (error) {

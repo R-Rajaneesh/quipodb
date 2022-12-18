@@ -46,36 +46,36 @@ class Sqlite {
         return "NONE";
     }
     createCollectionProvider(collectionName) {
-        this.collectionName = collectionName;
+        collectionName = `${collectionName}`;
         try {
-            this.sqlite.prepare(`CREATE TABLE IF NOT EXISTS ${this.collectionName} (${this.options.primaryKey} NONE NOT NULL PRIMARY KEY)`).run();
+            this.sqlite.prepare(`CREATE TABLE IF NOT EXISTS ${collectionName} (${this.options.primaryKey} NONE NOT NULL PRIMARY KEY)`).run();
         }
         catch (error) {
             if (this.options.dev)
                 console.log(error);
         }
     }
-    createColumnProvider(columnName, dataType = "NONE") {
+    createColumnProvider(collectionName, columnName, dataType = "NONE") {
         try {
-            this.sqlite.prepare(`ALTER TABLE ${this.collectionName} ADD ${columnName} ${dataType}`).run();
+            this.sqlite.prepare(`ALTER TABLE ${collectionName} ADD ${columnName} ${dataType}`).run();
         }
         catch (error) {
             if (this.options.dev)
                 console.log(error);
         }
     }
-    createDocProvider(data) {
+    createDocProvider(collectionName, data) {
         const KEYS = Object.keys(data);
         const VALUES = Object.values(data).map((v) => this.mapValues(v));
-        const COLUMNS = this.sqlite.prepare(`PRAGMA table_info(${this.collectionName})`).all();
+        const COLUMNS = this.sqlite.prepare(`PRAGMA table_info(${collectionName})`).all();
         try {
-            const docs = this.getDocProvider(data);
+            const docs = this.getDocProvider(collectionName, data);
             if (!docs || docs.length === 0) {
                 KEYS.forEach((key, i) => {
                     if (!COLUMNS.map((v) => v.name).includes(key))
-                        this.createColumnProvider(key, this.typeof(VALUES[i]));
+                        this.createColumnProvider(collectionName, key, this.typeof(VALUES[i]));
                 });
-                this.sqlite.prepare(`INSERT INTO ${this.collectionName} (${KEYS.join(", ")}) VALUES (${VALUES.map((v) => (v = "(?)")).join(", ")})`).run(VALUES);
+                this.sqlite.prepare(`INSERT INTO ${collectionName} (${KEYS.join(", ")}) VALUES (${VALUES.map((v) => (v = "(?)")).join(", ")})`).run(VALUES);
             }
         }
         catch (error) {
@@ -92,10 +92,10 @@ class Sqlite {
                 console.log(error);
         }
     }
-    deleteDocProvider(data) {
+    deleteDocProvider(collectionName, data) {
         const KEYS = Object.keys(data);
         const VALUES = Object.values(data).map((v) => this.mapValues(v));
-        this.sqlite.prepare(`DELETE FROM ${this.collectionName} WHERE ${KEYS.map((k, i) => (k += ` = (?)`))}`).run(VALUES);
+        this.sqlite.prepare(`DELETE FROM ${collectionName} WHERE ${KEYS.map((k, i) => (k += ` = (?)`))}`).run(VALUES);
     }
     getCollectionProvider(collectionName) {
         const result = this.sqlite.prepare(`SELECT * FROM ${collectionName}`).all();
@@ -118,12 +118,12 @@ class Sqlite {
         const result = this.sqlite.prepare(`SELECT name FROM sqlite_master WHERE type='table'`).all();
         return result.map((c) => c.name);
     }
-    getDocProvider(data) {
+    getDocProvider(collectionName, data) {
         const KEYS = Object.keys(data);
         const VALUES = Object.values(data).map((v) => this.mapValues(v));
         let result;
         try {
-            result = this.sqlite.prepare(`SELECT * FROM ${this.collectionName} WHERE ${KEYS.map((k) => (k += `=(?)`)).join(" AND ")}`).get(...VALUES);
+            result = this.sqlite.prepare(`SELECT * FROM ${collectionName} WHERE ${KEYS.map((k) => (k += `=(?)`)).join(" AND ")}`).get(...VALUES);
         }
         catch (error) {
             if (this.options.dev)
@@ -143,18 +143,18 @@ class Sqlite {
         });
         return result;
     }
-    updateDocProvider(refData, data) {
+    updateDocProvider(collectionName, refData, data) {
         const KEYS = Object.keys(data);
         const VALUES = Object.values(data).map((v) => this.mapValues(v));
-        const COLUMNS = this.sqlite.prepare(`PRAGMA table_info(${this.collectionName})`).all();
+        const COLUMNS = this.sqlite.prepare(`PRAGMA table_info(${collectionName})`).all();
         KEYS.forEach(async (key, i) => {
             if (!COLUMNS.map((v) => v.name).includes(key))
-                this.createColumnProvider(key, this.typeof(VALUES[i]));
+                this.createColumnProvider(collectionName, key, this.typeof(VALUES[i]));
         });
         const args = KEYS.map((v, i) => (v += ` = (?)`)).join(", ");
-        const Data = refData[`${this.options.primaryKey}`] ? refData : this.getDocProvider(refData);
+        const Data = refData[`${this.options.primaryKey}`] ? refData : this.getDocProvider(collectionName, refData);
         try {
-            this.sqlite.prepare(`UPDATE ${this.collectionName} SET ${args} WHERE ${this.options.primaryKey} = (?)`).run(VALUES, Data[`${this.options.primaryKey}`]);
+            this.sqlite.prepare(`UPDATE ${collectionName} SET ${args} WHERE ${this.options.primaryKey} = (?)`).run(VALUES, Data[`${this.options.primaryKey}`]);
         }
         catch (error) {
             if (this.options.dev)

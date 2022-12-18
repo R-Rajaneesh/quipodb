@@ -23,7 +23,7 @@ export class FireStore {
     cb(this.collection);
     return this.collection;
   }
-  public async createDocProvider(data: document, cb: Function = () => {}) {
+  public async createDocProvider(collectionName: String, data: document, cb: Function = () => {}) {
     this.collection.add(data);
     cb();
     return;
@@ -37,7 +37,7 @@ export class FireStore {
     cb();
     return;
   }
-  public async deleteDocProvider(data: document, cb: Function = () => {}) {
+  public async deleteDocProvider(collectionName: String, data: document, cb: Function = () => {}) {
     try {
       const snapshot = (await this.collection.get()).docs.map((doc) => ({ ...doc.data(), _id: doc.id }));
       const res = _.find<any>(snapshot, data);
@@ -55,12 +55,12 @@ export class FireStore {
     return data;
   }
   public async getCollectionsProvider(cb: Function = () => {}) {
-    const AllData:any = [];
+    const AllData: any = [];
     await this.firestore.listCollections().then((val) => val.forEach((v) => AllData.push(v.id)));
     cb(AllData);
     return AllData;
   }
-  public async getDocProvider(data: document, cb: Function = () => {}) {
+  public async getDocProvider(collectionName: String, data: document, cb: Function = () => {}) {
     let result: any;
     try {
       const snapshot = (await this.collection.get()).docs.map((doc) => ({ ...doc.data(), _id: doc.id }));
@@ -71,8 +71,8 @@ export class FireStore {
     cb(result);
     return result;
   }
-  public async updateDocProvider(refData: document, data: document, cb: Function = () => {}) {
-    if (!(await this.getDocProvider(refData))) {
+  public async updateDocProvider(collectionName: String, refData: document, data: document, cb: Function = () => {}) {
+    if (!(await this.getDocProvider(collectionName, refData))) {
       cb();
       return;
     }

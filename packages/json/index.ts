@@ -11,7 +11,6 @@ interface JsonStoreOptions {
   path: string;
 }
 export class JsonStore {
-  private collectionName: string;
   private storage: storage;
   constructor(options: JsonStoreOptions) {
     if (!fs.existsSync(options.path)) {
@@ -36,13 +35,12 @@ export class JsonStore {
       });
   }
   public async createCollectionProvider(collectionName: string, cb: Function = () => {}) {
-    this.collectionName = collectionName;
     this.storage[collectionName] = [];
     cb(this.storage[collectionName]);
     return this.storage[collectionName];
   }
-  public async createDocProvider(data: document, cb: Function = () => {}) {
-    this.storage[this.collectionName].push(data);
+  public async createDocProvider(collectionName: string, data: document, cb: Function = () => {}) {
+    this.storage[collectionName].push(data);
     cb(data);
     return data;
   }
@@ -51,8 +49,8 @@ export class JsonStore {
     cb();
     return;
   }
-  public async deleteDocProvider(data: document, cb: Function = () => {}) {
-    this.storage[this.collectionName].splice(_.findIndex(this.storage[this.collectionName], data), 1);
+  public async deleteDocProvider(collectionName: string, data: document, cb: Function = () => {}) {
+    this.storage[collectionName].splice(_.findIndex(this.storage[collectionName], data), 1);
     cb();
     return;
   }
@@ -66,15 +64,15 @@ export class JsonStore {
     cb(data);
     return data;
   }
-  public async getDocProvider(data: document, cb: Function = () => {}) {
-    const Data = _.find(this.storage[this.collectionName], data);
+  public async getDocProvider(collectionName: string, data: document, cb: Function = () => {}) {
+    const Data = _.find(this.storage[collectionName], data);
     cb(Data);
     return Data;
   }
-  public async updateDocProvider(refData: document, data: document, cb: Function = () => {}) {
-    const docIndex = _.findIndex(this.storage[this.collectionName], refData);
-    const Data = _.defaultsDeep(this.storage[this.collectionName][docIndex], data);
-    this.storage[this.collectionName][docIndex] = Data;
+  public async updateDocProvider(collectionName: string, refData: document, data: document, cb: Function = () => {}) {
+    const docIndex = _.findIndex(this.storage[collectionName], refData);
+    const Data = _.defaultsDeep(this.storage[collectionName][docIndex], data);
+    this.storage[collectionName][docIndex] = Data;
     cb(Data);
     return Data;
   }

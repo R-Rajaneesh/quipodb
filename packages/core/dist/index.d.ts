@@ -4,13 +4,13 @@ interface constructorOptions {
 }
 interface providers {
     createCollectionProvider(collectionName: String, cb?: Function): Promise<any> | any;
-    createDocProvider(data: document, cb?: Function): Promise<any> | any;
+    createDocProvider(collectionName: String, data: document, cb?: Function): Promise<any> | any;
     deleteCollectionProvider(collectionName: String, cb?: Function): Promise<any> | any;
-    deleteDocProvider(data: document | fn, cb?: Function): Promise<any> | any;
+    deleteDocProvider(collectionName: String, data: document | fn, cb?: Function): Promise<any> | any;
     getCollectionProvider(collectionName: String, cb?: Function): Promise<any> | any;
     getCollectionsProvider(cb?: Function): Promise<any> | any[];
-    getDocProvider(data: document | fn, cb?: Function): Promise<any> | any;
-    updateDocProvider(refData: document | fn, data: document, cb?: Function): Promise<any> | any;
+    getDocProvider(collectionName: String, data: document | fn, cb?: Function): Promise<any> | any;
+    updateDocProvider(collectionName: String, refData: document | fn, data: document, cb?: Function): Promise<any> | any;
 }
 type fn = (data: Object[] | Object) => any;
 interface storage {
@@ -43,11 +43,11 @@ export declare class QuipoDB {
 }
 interface DocsOptions {
     providers: providers[];
-    collectionName: String;
+    collectionName: string;
     storage: storage;
     cache: Boolean;
 }
-declare class Docs {
+export declare class Docs {
     private options;
     private providers;
     private collectionName;

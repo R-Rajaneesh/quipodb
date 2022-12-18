@@ -20,7 +20,6 @@ export class QuipoDB {
      * @returns {Docs} The collection to interact with
      */
     createCollection(collectionName, cb = () => { }) {
-        this.collectionName = collectionName;
         try {
             this.providers.forEach(async (provider) => {
                 await provider.createCollectionProvider(collectionName);
@@ -31,7 +30,7 @@ export class QuipoDB {
         catch (error) {
             error;
         }
-        const docs = new this.Docs({ providers: this.providers, collectionName: this.collectionName, storage: this.storage, cache: this.options.cache });
+        let docs = new this.Docs({ providers: this.providers, collectionName: `${collectionName}`, storage: this.storage, cache: this.options.cache });
         cb(docs);
         return docs;
     }
@@ -55,7 +54,7 @@ export class QuipoDB {
         return;
     }
 }
-class Docs {
+export class Docs {
     options;
     providers;
     collectionName;
@@ -88,14 +87,14 @@ class Docs {
             if (Array.isArray(data)) {
                 data.forEach((doc) => {
                     this.providers.forEach(async (provider) => {
-                        await provider.createDocProvider(doc);
+                        await provider.createDocProvider(this.collectionName, doc);
                     });
                     if (this.options.cache)
                         this.storage[`${this.collectionName}`].push(doc);
                 });
             }
             this.providers.forEach(async (provider) => {
-                await provider.createDocProvider(data);
+                await provider.createDocProvider(this.collectionName, data);
             });
             if (this.options.cache)
                 this.storage[`${this.collectionName}`].push(data);
@@ -127,7 +126,7 @@ class Docs {
             if (typeof data === "function")
                 data = data(await this.providers[0].getCollectionProvider(this.collectionName));
             this.providers.forEach(async (provider) => {
-                await provider.deleteDocProvider(data);
+                await provider.deleteDocProvider(this.collectionName, data);
             });
             if (this.options.cache) {
                 this.storage[`${this.collectionName}`].splice(_.findIndex(this.storage[`${this.collectionName}`], data), 1);
@@ -160,7 +159,7 @@ class Docs {
         if (typeof data === "function")
             data = data(await this.providers[0].getCollectionProvider(this.collectionName)) ?? {};
         try {
-            const Data = await this.providers[0].getDocProvider(data);
+            const Data = await this.providers[0].getDocProvider(this.collectionName, data);
             result = this.options.cache ? _.find(this.storage[`${this.collectionName}`], data) ?? Data : Data;
         }
         catch (error) {
@@ -269,7 +268,7 @@ class Docs {
         });
         try {
             this.providers.forEach(async (provider) => {
-                await provider.updateDocProvider(oldDoc, data);
+                await provider.updateDocProvider(this.collectionName, oldDoc, data);
             });
             if (this.options.cache)
                 this.storage[`${this.collectionName}`][_.findIndex(this.storage[`${this.collectionName}`], oldDoc)] = data;

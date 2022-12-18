@@ -2,7 +2,7 @@ import sqlite from "better-sqlite3";
 interface sqliteConstructor {
     primaryKey: string;
     path: String;
-    dev: boolean;
+    dev?: boolean;
 }
 interface document {
     [key: string]: string | number | Object | Array<any> | any;
@@ -17,12 +17,12 @@ declare class Sqlite {
     private typeof;
     createCollectionProvider(collectionName: String): void;
     private createColumnProvider;
-    createDocProvider(data: document): void;
+    createDocProvider(collectionName: String, data: document): void;
     deleteCollectionProvider(collectionName: String): void;
-    deleteDocProvider(data: document): void;
+    deleteDocProvider(collectionName: String, data: document): void;
     getCollectionProvider(collectionName: String): any[];
     getCollectionsProvider(): any[];
-    getDocProvider(data: document): any;
-    updateDocProvider(refData: document, data: document): void;
+    getDocProvider(collectionName: String, data: document): any;
+    updateDocProvider(collectionName: String, refData: document, data: document): void;
 }
 export default Sqlite;

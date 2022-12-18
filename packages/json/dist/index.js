@@ -1,7 +1,6 @@
 import _ from "lodash";
 import fs from "fs-extra";
 export class JsonStore {
-    collectionName;
     storage;
     constructor(options) {
         if (!fs.existsSync(options.path)) {
@@ -28,13 +27,12 @@ export class JsonStore {
         });
     }
     async createCollectionProvider(collectionName, cb = () => { }) {
-        this.collectionName = collectionName;
         this.storage[collectionName] = [];
         cb(this.storage[collectionName]);
         return this.storage[collectionName];
     }
-    async createDocProvider(data, cb = () => { }) {
-        this.storage[this.collectionName].push(data);
+    async createDocProvider(collectionName, data, cb = () => { }) {
+        this.storage[collectionName].push(data);
         cb(data);
         return data;
     }
@@ -43,8 +41,8 @@ export class JsonStore {
         cb();
         return;
     }
-    async deleteDocProvider(data, cb = () => { }) {
-        this.storage[this.collectionName].splice(_.findIndex(this.storage[this.collectionName], data), 1);
+    async deleteDocProvider(collectionName, data, cb = () => { }) {
+        this.storage[collectionName].splice(_.findIndex(this.storage[collectionName], data), 1);
         cb();
         return;
     }
@@ -58,15 +56,15 @@ export class JsonStore {
         cb(data);
         return data;
     }
-    async getDocProvider(data, cb = () => { }) {
-        const Data = _.find(this.storage[this.collectionName], data);
+    async getDocProvider(collectionName, data, cb = () => { }) {
+        const Data = _.find(this.storage[collectionName], data);
         cb(Data);
         return Data;
     }
-    async updateDocProvider(refData, data, cb = () => { }) {
-        const docIndex = _.findIndex(this.storage[this.collectionName], refData);
-        const Data = _.defaultsDeep(this.storage[this.collectionName][docIndex], data);
-        this.storage[this.collectionName][docIndex] = Data;
+    async updateDocProvider(collectionName, refData, data, cb = () => { }) {
+        const docIndex = _.findIndex(this.storage[collectionName], refData);
+        const Data = _.defaultsDeep(this.storage[collectionName][docIndex], data);
+        this.storage[collectionName][docIndex] = Data;
         cb(Data);
         return Data;
     }
