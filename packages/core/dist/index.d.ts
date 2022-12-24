@@ -201,60 +201,113 @@ export declare class Docs {
     private _$push;
 }
 export declare class Query {
-    private data;
-    private key;
-    private current;
-    private _limit;
-    private old;
+    data: any[];
+    key: string;
+    _limit: number;
     constructor(data: any[]);
-    add(val: number): this;
     /**
-     * Gets back to the top level on the data
+     * Add a number to the selected key
+     * @param {number} value
+     */
+    add(value: number): this;
+    /**
+     * Clear the querying data and fallback to the top-level of the object
      */
     clearQuery(): this;
-    delete(key: string): this;
-    divide(val: number): this;
-    equals(val: any): this;
     /**
-     * Check if the data exists on every object
+     * Divide a number to the selected key
+     * @param {number} value
      */
-    exists(key: string): boolean;
-    find(key: string, val: any): void;
+    divide(value: number): this;
+    /**
+     * Check if the value matches
+     * @param  {any} value
+     */
+    equals(value: any): this;
+    /**
+     * Get the data from the key and value
+     * @param  {string} key
+     * @param  {any} value
+     */
+    find(key: string, value: any): void;
+    /**
+     * Check if greater
+     * @param  {number} val
+     */
     gt(val: number): this;
+    /**
+     * Check if greater or equal
+     * @param  {number} val
+     */
     gte(val: number): this;
+    /**
+     * Limit the number of outputs
+     * @param  {number} val
+     */
     limit(val: number): this;
+    /**
+     * Check if lesser
+     * @param  {number} val
+     */
     lt(val: number): this;
+    /**
+     * Check if lesser or equal
+     * @param  {number} val
+     */
     lte(val: number): this;
-    multiply(val: number): this;
-    push(val: any): this;
-    splice(start: number, deleteCount?: number, items?: any[]): this;
+    /**
+     * Multiply a number to the selected key
+     * @param {number} value
+     */
+    multiply(value: number): this;
+    /**
+     * Push elements into potentially possible arrays
+     * @param  {any[]} ...value
+     */
+    push(...value: any[]): this;
     /**
      * Get the raw data
      */
     raw(): any[];
-    update(val: any): this;
     /**
-     * Get into a deeper object
-     * @param {String} key
-     */
-    select(key: string): this;
-    subtract(val: number): this;
-    /**
-     * Saves the queries on the data
+     * Save the data to save to the database
      */
     save(): any[];
     /**
-     * Get the Latest data
+     * Get deeper into the object
+     * @param  {string} key
+     */
+    select(key: string): this;
+    /**
+     * Remove (or replace) items from an array
+     * @param  {number} start
+     * @param  {number} [deleteCount]
+     * @param  {any[]} [items]
+     */
+    splice(start: number, deleteCount?: number, items?: any[]): this;
+    /**
+     * Subtract a number to the selected key
+     * @param {number} value
+     */
+    subtract(value: number): this;
+    /**
+     * Get the entire data from the top-level
      */
     toJSON(): any[];
     /**
-     * Get the last selected query
+     * Get the last selected data
      */
     toValue(): any[];
     /**
-     * Select a object to query next
-     * @param {string} key
+     * Update the entire value with a new one
+     * @param  {any} value
      */
-    where(key: string): this;
+    update(value: any): this;
+    /**
+     * Select data to query on next
+     * @param  {string} key
+     * @param  {any} [value]
+     */
+    where(key: string, value?: any): this;
 }
 export {};

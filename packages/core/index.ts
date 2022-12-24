@@ -122,7 +122,7 @@ export class Docs {
       if (Array.isArray(data)) {
         data.forEach((doc) => {
           this.providers.forEach(async (provider) => {
-            await provider.createDocProvider(this.collectionName,doc);
+            await provider.createDocProvider(this.collectionName, doc);
           });
           if (this.options.cache) this.storage[`${this.collectionName}`].push(doc);
         });
@@ -421,174 +421,213 @@ export class Docs {
 }
 
 export class Query {
-  private data: any[];
-  private key: string;
-  private current: any[];
-  private _limit: number;
-  private old: any[];
+  data: any[];
+  key!: string;
+  _limit!: number;
   constructor(data: any[]) {
-    this.old = JSON.parse(JSON.stringify(data));
-    this.data = data.map((v, i) => ({ ...v, _$current: v, _$old: this.old[i] }));
-    this.key = "";
-    this.current = this.data.map((v, i) => ({ ...v, _$current: v, _$old: this.old[i] }));
+    this.data = data.map((value, index, array) => {
+      value["_$old"] = JSON.parse(JSON.stringify(value));
+      value["_$current"] = value;
+      return value;
+    });
   }
-  public add(val: number) {
-    this.current.forEach((d) => {
-      d._$current[this.key] += val;
+  /**
+   * Add a number to the selected key
+   * @param {number} value
+   */
+  public add(value: number) {
+    this.data.forEach((data) => {
+      data["_$current"][`${this.key}`] += value;
     });
     return this;
   }
   /**
-   * Gets back to the top level on the data
+   * Clear the querying data and fallback to the top-level of the object
    */
   public clearQuery() {
-    this.current = this.data.map((v, i) => ({ ...v, _$current: v, _$old: this.old[i] }));
-    return this;
-  }
-  public delete(key: string) {
-    this.current = this.current.map((v, i) => {
-      delete v._$current[key];
-      v._$old = v;
-      return (v = v);
+    this.data = this.data.map((value, index) => {
+      const val = JSON.parse(JSON.stringify(value));
+      const old = JSON.parse(JSON.stringify(value["_$old"]));
+      delete value["_$old"];
+
+      return { ...val, _$current: value, _$old: old };
     });
-    return this;
-  }
-  public divide(val: number) {
-    this.current.forEach((d) => {
-      d._$current[this.key] /= val;
-    });
-    return this;
-  }
-  public equals(val: any) {
-    this.current = this.current.filter((v, i) => v._$current[this.key] === val);
     return this;
   }
   /**
-   * Check if the data exists on every object
+   * Divide a number to the selected key
+   * @param {number} value
    */
-  public exists(key: string) {
-    return this.current.every((v) => v[key]);
-  }
-  public find(key: string, val: any) {
-    const res: any[] = [];
-    return this.current.forEach((v) => {
-      if (v._$current[key] === val) res.push(v);
+  public divide(value: number) {
+    this.data.forEach((data) => {
+      data["_$current"][`${this.key}`] /= value;
     });
+    return this;
   }
+  /**
+   * Check if the value matches
+   * @param  {any} value
+   */
+  public equals(value: any) {
+    this.data = this.data.filter((val) => val["_$current"][`${this.key}`] === value);
+    return this;
+  }
+  /**
+   * Get the data from the key and value
+   * @param  {string} key
+   * @param  {any} value
+   */
+  public find(key: string, value: any) {
+    return this.data.forEach((val, index, array) => this.data[index]["_$current"][`${key}`] === value);
+  }
+  /**
+   * Check if greater
+   * @param  {number} val
+   */
   public gt(val: number) {
-    this.current = this.current.filter((v, i) => v._$current[this.key] > val);
+    this.data = this.data.filter((value) => value["_$current"][`${this.key}`] > val);
     return this;
   }
+  /**
+   * Check if greater or equal
+   * @param  {number} val
+   */
   public gte(val: number) {
-    this.current = this.current.filter((v, i) => v._$current[this.key] >= val);
+    this.data = this.data.filter((value) => value["_$current"][`${this.key}`] >= val);
     return this;
   }
+  /**
+   * Limit the number of outputs
+   * @param  {number} val
+   */
   public limit(val: number) {
     this._limit = val;
     return this;
   }
-
+  /**
+   * Check if lesser
+   * @param  {number} val
+   */
   public lt(val: number) {
-    this.current = this.current.filter((v, i) => v._$current[this.key] < val);
+    this.data = this.data.filter((value) => value["_$current"][`${this.key}`] < val);
     return this;
   }
-
+  /**
+   * Check if lesser or equal
+   * @param  {number} val
+   */
   public lte(val: number) {
-    this.current = this.current.filter((v, i) => v._$current[this.key] <= val);
+    this.data = this.data.filter((value) => value["_$current"][`${this.key}`] <= val);
+    return this;
+  }
+  /**
+   * Multiply a number to the selected key
+   * @param {number} value
+   */
+  public multiply(value: number) {
+    this.data.forEach((data) => {
+      data["_$current"][`${this.key}`] *= value;
+    });
+    return this;
+  }
+  /**
+   * Push elements into potentially possible arrays
+   * @param  {any[]} ...value
+   */
+  public push(...value: any[]) {
+    this.data.forEach((data) => {
+      if (Array.isArray(data["_$current"][`${this.key}`])) data["_$current"][`${this.key}`].push(...value);
+    });
     return this;
   }
 
-  public multiply(val: number) {
-    this.current.forEach((d) => {
-      d._$current[this.key] *= val;
-    });
-    return this;
-  }
-  public push(val: any) {
-    this.current.forEach((d) => {
-      if (Array.isArray(d._$current[this.key])) d._$current[this.key].push(val);
-    });
-    return this;
-  }
-  public splice(start: number, deleteCount?: number, items?: any[]) {
-    this.current.forEach((d) => {
-      if (Array.isArray(d._$current[this.key])) d._$current[this.key].splice(start, deleteCount, items);
-    });
-
-    return this;
-  }
   /**
    * Get the raw data
    */
   public raw() {
-    const data = this.current.map((v) => (v = v._$current));
-    return data;
+    return this.data;
   }
-  public update(val: any) {
-    this.current.forEach((d) => {
-      d._$current[this.key] = val;
+  /**
+   * Save the data to save to the database
+   */
+  public save() {
+    return this.data.map((value, index, array) => {
+      delete value["_$old"]?.["_$current"];
+      delete value["_$current"];
+      return value;
+    });
+  }
+  /**
+   * Get deeper into the object
+   * @param  {string} key
+   */
+  public select(key: string) {
+    this.data.map((val, index) => {
+      val["_$current"] = val?.["_$current"][`${key}`];
     });
     return this;
   }
   /**
-   * Get into a deeper object
-   * @param {String} key
+   * Remove (or replace) items from an array
+   * @param  {number} start
+   * @param  {number} [deleteCount]
+   * @param  {any[]} [items]
    */
-  public select(key: string) {
-    this.current.map((v, i) => {
-      this.current[i]._$current = v[key];
+  public splice(start: number, deleteCount?: number, items?: any[]) {
+    this.data.forEach((data) => {
+      if (Array.isArray(data["_$current"][`${this.key}`])) data["_$current"][`${this.key}`].splice(start, deleteCount, items);
     });
 
     return this;
   }
-  public subtract(val: number) {
-    this.current.forEach((d) => {
-      d._$current[this.key] -= val;
+  /**
+   * Subtract a number to the selected key
+   * @param {number} value
+   */
+  public subtract(value: number) {
+    this.data.forEach((data) => {
+      data["_$current"][`${this.key}`] -= value;
     });
     return this;
   }
   /**
-   * Saves the queries on the data
-   */
-  public save() {
-    this.current = this.current.map((v, i) => (v = { ...v._$current }));
-    this.data = this.current;
-    const res = this.data.map((v, i) => {
-      delete v["_$old"]["_$current"];
-      delete v["_$current"];
-      return (v = { ...v });
-    });
-    return res;
-  }
-  /**
-   * Get the Latest data
+   * Get the entire data from the top-level
    */
   public toJSON() {
-    return this.data.map((v, i) => ({ ...v }));
+    return this.data.map((value, index, array) => {
+      delete value["_$old"];
+      return value;
+    });
   }
   /**
-   * Get the last selected query
+   * Get the last selected data
    */
   public toValue() {
-    return this.current
-      .map((v, i) => {
-        if (i + 1 > this._limit) {
-          if (v._$current) {
-            v = { ...v._$current, _$old: v._$old };
-            delete v._$current;
-          }
-          v._$old = v._$old;
-          return (v = v);
-        }
+    return this.data
+      .map((value, index, array) => {
+        if (this._limit && index + 1 > this._limit) return value["_$current"];
+        return value["_$current"];
       })
-      .filter((v) => v !== undefined || null);
+      .filter((value, index, array) => value !== undefined || null);
   }
   /**
-   * Select a object to query next
-   * @param {string} key
+   * Update the entire value with a new one
+   * @param  {any} value
    */
-  public where(key: string) {
-    this.key = `${key}`;
+  public update(value: any) {
+    this.data.forEach((data) => {
+      data["_$current"][`${this.key}`] = value;
+    });
+    return this;
+  }
+  /**
+   * Select data to query on next
+   * @param  {string} key
+   * @param  {any} [value]
+   */
+  public where(key: string, value?: any) {
+    if (value) this.data = this.data.filter((val, i) => val["_$current"][`${key}`] === value);
+    else this.key = key;
     return this;
   }
 }
